@@ -79,3 +79,6 @@ read_specific_file <- function(filename){
 specific_df_list <- lapply(specific_filenames, read_specific_file)
 specific <- bind_rows(specific_df_list)
 rm(specific_df_list)
+
+write.csv(generic, 'Data/generic_data.csv', row.names = FALSE)
+write.csv(specific, 'Data/specific_data.csv', row.names = FALSE)
