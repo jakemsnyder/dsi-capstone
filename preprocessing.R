@@ -2,7 +2,7 @@ library(tidyverse)
 library(readxl)
 
 # setwd('~/Columbia/Capstone/dsi-capstone/')
-generic_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'OS', 'Country', 'Area',
+generic_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'OS', 'Country', 'State',
                       'City', 'Provider', 'Gender', 'Age', 'Birthyear', 'Vote_House',
                       'Trump_Sentiment', 'Party', 'Marital_Status', 'N_Children',
                       'Education', 'Employment', 'Career', 'Race', 'Income', 'Zip',
@@ -13,28 +13,17 @@ colnames(generic) <- generic_colnames
 
 generic <- generic %>%
   mutate(Vote_House = case_when(Vote_House == 'Will vote Republican' ~ 'Republican',
-                                Vote_House == 'Will vote Democrat' ~ 'Democrat',
+                                Vote_House == 'Will vote Democratic' ~ 'Democrat',
                                 Vote_House == 'Will vote other/not sure' ~ 'Other/Not sure',
                                 Vote_House == "Won't Vote" ~ 'Wont vote',
-                                Vote_House == "Won't vote" ~ 'Wont vote'),
-         Vote_House = factor(Vote_House,
-                             levels=c('Republican',
-                                      'Democratic',
-                                      'Other/Not sure',
-                                      'Wont vote')),
-         Trump_Sentiment = factor(Trump_Sentiment,
-                                  levels=c('Approve Strongly',
-                                           'Approve Weakly',
-                                           'Neither Approve nor Disapprove',
-                                           'Disapprove Weakly',
-                                           'Disapprove Strongly')))
+                                Vote_House == "Won't vote" ~ 'Wont vote'))
 
 
 specific_filenames <- list.files(pattern = 'Pollfish*', recursive = TRUE)
 
 
 read_specific_file <- function(filename){
-  specific_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'Manufacturer', 'OS', 'Country', 'Area',
+  specific_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'Manufacturer', 'OS', 'Country', 'State',
                          'City', 'Provider', 'Gender', 'Age', 'Birthyear', 'Birth_dayofmonth',
                          'Will_Vote', 'Vote_Ethusiasm', 'Vote_House', 'TEMP', 'Democrat_Opinion',
                          'Climate_Change_Government_Opinion', 'Topic_Importance', 'Clean_Regs_Health',
