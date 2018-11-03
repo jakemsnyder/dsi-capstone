@@ -1,10 +1,7 @@
 library(tidyverse)
 library(readxl)
-# library(rstan)
-# options(mc.cores = parallel::detectCores())
-# rstan_options(auto_write = TRUE)
 
-setwd('~/Columbia/Capstone/dsi-capstone/')
+# setwd('~/Columbia/Capstone/dsi-capstone/')
 generic_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'OS', 'Country', 'Area',
                       'City', 'Provider', 'Gender', 'Age', 'Birthyear', 'Vote_House',
                       'Trump_Sentiment', 'Party', 'Marital_Status', 'N_Children',
@@ -35,11 +32,8 @@ generic <- generic %>%
 
 
 specific_filenames <- list.files(pattern = 'Pollfish*', recursive = TRUE)
-# specific <- read_xls('Data/Pollfish_Survey_Copy_of_NC-09.1386969.moreifo_completed2.xls',
-#                      sheet='Individuals')
 
 read_specific_file <- function(filename){
-  # full_file <- paste0('Data/', filename)
   specific_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'Manufacturer', 'OS', 'Country', 'Area',
                          'City', 'Provider', 'Gender', 'Age', 'Birthyear', 'Birth_dayofmonth',
                          'Will_Vote', 'Vote_Ethusiasm', 'Vote_House', 'TEMP', 'Democrat_Opinion',
