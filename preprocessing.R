@@ -11,7 +11,6 @@ generic_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'OS', 'Country', 'Area
 generic <- read_xlsx('Data/EarlyGenericVoting2018.xlsx')
 colnames(generic) <- generic_colnames
 
-
 generic <- generic %>%
   mutate(Vote_House = case_when(Vote_House == 'Will vote Republican' ~ 'Republican',
                                 Vote_House == 'Will vote Democrat' ~ 'Democrat',
@@ -32,6 +31,7 @@ generic <- generic %>%
 
 
 specific_filenames <- list.files(pattern = 'Pollfish*', recursive = TRUE)
+
 
 read_specific_file <- function(filename){
   specific_colnames <- c('ID', 'Survey_Start', 'Survey_End', 'Manufacturer', 'OS', 'Country', 'Area',
@@ -72,9 +72,9 @@ read_specific_file <- function(filename){
                                              'Disapprove Strongly'))) %>%
     select_(.dots = generic_colnames)
     
-  
   specific_data
 }
+
 
 specific_df_list <- lapply(specific_filenames, read_specific_file)
 specific <- bind_rows(specific_df_list)
