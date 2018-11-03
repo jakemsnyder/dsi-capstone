@@ -58,7 +58,7 @@ read_specific_file <- function(filename){
   specific_colnames[17] <- varcolname
   colnames(specific_data) <- specific_colnames
   
-  specific_data <- specific %>%
+  specific_data <- specific_data %>%
     # IMPUTATION HERE - REVIEW FOR MODELS
     mutate(Vote_House = case_when(Will_Vote == 'Definitely not' ~ 'Wont vote',
                                   str_detect(Vote_House, '^Republican') ~ 'Republican',
