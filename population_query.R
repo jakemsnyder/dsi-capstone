@@ -1,5 +1,6 @@
 library(data.world)
 
+# run this first to set up your api key. it requires a free data.world account
 # data.world::set_config(data.world::save_config(auth_token = "YOUR API TOKEN"))
 
 education_data <- 'https://data.world/uscensusbureau/acs-2016-5-e-education/workspace/file?filename=USA_All_States.csv'
@@ -9,7 +10,7 @@ education_data <- 'https://data.world/uscensusbureau/acs-2016-5-e-education/work
 
 
 agesex <- 'https://data.world/uscensusbureau/acs-2016-5-e-agesex'
-# racial info also exists here
+# racial info also exists here if we want to add
 
 # keep in mind we want _voting_ population, so we need age in every query from census to filter children
 dw_query <- data.world::qry_sql(
