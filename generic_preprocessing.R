@@ -24,6 +24,7 @@ loadRData <- function(fileName){
 }
 
 # load batch2
+
 survey1 <- loadRData("Data/Pollfish_Survey_FI10002d.378826.moreifo_completed2.RData")
 survey2 <- loadRData("Data/Pollfish_Survey_FI10006b.378910.moreifo_completed2.RData")
 survey3 <- loadRData("Data/Pollfish_Survey_IN10001a.406052.moreifo_completed2.RData")
@@ -52,6 +53,7 @@ for (i in datasets){
   all_generic <- rbind(all_generic, i)
 }
 
-save(all_generic, file = "Data/all_generic.RData")
 
+save(all_generic, file = "all_generic.RData")
+write.csv(all_generic, 'all_generic.csv')
 #load("all_generic.RData")
