@@ -55,7 +55,7 @@ for (i in datasets){
 }
 
 save(all_generic, file = "all_generic.RData")
-
+write.csv(all_generic, 'all_generic.csv')
 #load("all_generic.RData")
 
 
