@@ -4,7 +4,6 @@ library(tidyverse)
 
 ## specific polling preprocessing
 load('Data/LCV_round_3.RData')
-demographics <- c()
 specific <- survey_total %>%
   select(party, gender, age, race, education, urbanicity, married,
          vote2018 = `If the election for the U.S. House of Representatives in your district was today, who would you vote for?`,
@@ -12,8 +11,9 @@ specific <- survey_total %>%
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = fct_recode(vote2018,
                                `Other candidate/not sure` = 'Other candidate',
-                               `Other candidate/not sure` = 'Undecided'))
-write_csv(specific, 'Data/specific_data.csv')
+                               `Other candidate/not sure` = 'Undecided'),
+         race = fct_recode(race, Other = 'Other Race'))
+write_csv(specific, 'Data/all_specific.csv')
   
 ## population preprocessing
 load('Data/projection_space_national_18-10_02.RData')
