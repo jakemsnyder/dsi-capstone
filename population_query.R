@@ -1,7 +1,19 @@
 library(data.world)
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+library(ggthemes)
+library(dplyr)
+library(GGally)
+library(vcd)
+library(extracat)
+library(DAAG)
+library(forcats)
+library(viridisLite)
 
 # run this first to set up your api key. it requires a free data.world account
-# data.world::set_config(data.world::save_config(auth_token = "YOUR API TOKEN"))
+data.world::set_config(data.world::save_config(auth_token = "YOUR API TOKEN HERE"))
+dwapi::configure(auth_token ="API TOKEN HERE")
 
 education_data <- 'https://data.world/uscensusbureau/acs-2016-5-e-education/workspace/file?filename=USA_All_States.csv'
 # age, sex, racial info also exists here
@@ -45,3 +57,6 @@ demo_data <- data.world::query(dw_query, dataset=agesex) %>%
   separate(demographic, c('gender', 'age_lower', 'age_upper')) %>%
   unite('age', c('age_lower', 'age_upper'), sep=' - ') %>%
   mutate(age = ifelse(age == '55 - plus', '> 54', age))
+
+#write.csv(demo_data, file = 'population_data.csv')
+
