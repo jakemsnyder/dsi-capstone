@@ -52,8 +52,9 @@ for (i in datasets){
   i <- i %>% select(generic_colnames)
   all_generic <- rbind(all_generic, i)
 }
-
+all_generic <- all_generic %>%
+  mutate(race = fct_recode(race, Other = 'Other Race'))
 
 save(all_generic, file = "Data/all_generic.RData")
 write_csv(all_generic, 'Data/all_generic.csv')
-#load("all_generic.RData")
+#load("Data/all_generic.RData")
