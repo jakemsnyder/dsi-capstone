@@ -13,6 +13,7 @@ specific <- survey_total %>%
   mutate(vote2018 = fct_recode(vote2018,
                                `Other candidate/not sure` = 'Other candidate',
                                `Other candidate/not sure` = 'Undecided'))
+write_csv(specific, 'Data/specific_data.csv')
   
 ## population preprocessing
 load('Data/projection_space_national_18-10_02.RData')
