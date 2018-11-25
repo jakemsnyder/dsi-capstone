@@ -1,0 +1,91 @@
+Demographic_Type,Demographic,Vote_R
+National,National,0.5079997001928218
+Gender Age Race,Male 18 - 24 White,0.5552132961656198
+Gender Age Race,Male 18 - 24 Hispanic,0.2742750145230272
+Gender Age Race,Male 18 - 24 Black,0.2095444327841854
+Gender Age Race,Male 18 - 24 Other,0.3419889351533023
+Gender Age Race,Male 25 - 34 White,0.5615947870041316
+Gender Age Race,Male 25 - 34 Hispanic,0.313668453587734
+Gender Age Race,Male 25 - 34 Black,0.2226908278910339
+Gender Age Race,Male 25 - 34 Other,0.45497409787640664
+Gender Age Race,Male 35 - 44 White,0.5952214434753562
+Gender Age Race,Male 35 - 44 Hispanic,0.3345247993825688
+Gender Age Race,Male 35 - 44 Black,0.18835376025976328
+Gender Age Race,Male 35 - 44 Other,0.47391819921007206
+Gender Age Race,Male 45 - 54 White,0.6450101568449105
+Gender Age Race,Male 45 - 54 Hispanic,0.29489965931900536
+Gender Age Race,Male 45 - 54 Black,0.13695984185630553
+Gender Age Race,Male 45 - 54 Other,0.4772445078840641
+Gender Age Race,Male > 54 White,0.6162606376561429
+Gender Age Race,Male > 54 Hispanic,0.3483072236282409
+Gender Age Race,Male > 54 Black,0.08550906775793184
+Gender Age Race,Male > 54 Other,0.45872481993777486
+Gender Age Race,Female 18 - 24 White,0.4986312012429675
+Gender Age Race,Female 18 - 24 Hispanic,0.2239316583548253
+Gender Age Race,Female 18 - 24 Black,0.15614261250188863
+Gender Age Race,Female 18 - 24 Other,0.2971821358891239
+Gender Age Race,Female 25 - 34 White,0.5228744753260072
+Gender Age Race,Female 25 - 34 Hispanic,0.2725493374470271
+Gender Age Race,Female 25 - 34 Black,0.17676270623496337
+Gender Age Race,Female 25 - 34 Other,0.4217132065148914
+Gender Age Race,Female 35 - 44 White,0.5274065550915891
+Gender Age Race,Female 35 - 44 Hispanic,0.2677095409807884
+Gender Age Race,Female 35 - 44 Black,0.13366821697321854
+Gender Age Race,Female 35 - 44 Other,0.4111155577510199
+Gender Age Race,Female 45 - 54 White,0.5645517064899764
+Gender Age Race,Female 45 - 54 Hispanic,0.2223795301262182
+Gender Age Race,Female 45 - 54 Black,0.09024872120244458
+Gender Age Race,Female 45 - 54 Other,0.3994679799598752
+Gender Age Race,Female > 54 White,0.5540213929488369
+Gender Age Race,Female > 54 Hispanic,0.2837593781657328
+Gender Age Race,Female > 54 Black,0.0595900884041562
+Gender Age Race,Female > 54 Other,0.4009933456155532
+Gender Race,Male White,0.6111978944613984
+Gender Race,Male Hispanic,0.3262542239188276
+Gender Race,Male Black,0.1311676670154758
+Gender Race,Male Other,0.45870148739905015
+Gender Race,Female White,0.5477736261502861
+Gender Race,Female Hispanic,0.2652484926876315
+Gender Race,Female Black,0.09423363623450047
+Gender Race,Female Other,0.3997191066532898
+Race Age,White 18 - 24,0.528062957760248
+Race Age,White 25 - 34,0.5420008225679451
+Race Age,White 35 - 44,0.5603005213240188
+Race Age,White 45 - 54,0.6039822158079685
+Race Age,White > 54,0.5840220761980277
+Race Age,Hispanic 18 - 24,0.24803674648513693
+Race Age,Hispanic 25 - 34,0.29107228947859315
+Race Age,Hispanic 35 - 44,0.29766279512942545
+Race Age,Hispanic 45 - 54,0.2568497410914518
+Race Age,Hispanic > 54,0.31203423045348216
+Race Age,Black 18 - 24,0.1806348418893014
+Race Age,Black 25 - 34,0.1954092286202057
+Race Age,Black 35 - 44,0.15482599942784112
+Race Age,Black 45 - 54,0.10941539135643308
+Race Age,Black > 54,0.07033869411361678
+Race Age,Other 18 - 24,0.3179076177131189
+Race Age,Other 25 - 34,0.43662343687283545
+Race Age,Other 35 - 44,0.43864439477386014
+Race Age,Other 45 - 54,0.43426837254535633
+Race Age,Other > 54,0.4274469464186015
+Gender Age,Male 18 - 24,0.48292486489475833
+Gender Age,Male 25 - 34,0.5028792197492505
+Gender Age,Male 35 - 44,0.5338942329973809
+Gender Age,Male 45 - 54,0.5686152769083572
+Gender Age,Male > 54,0.5558752205050177
+Gender Age,Female 18 - 24,0.4158509077808475
+Gender Age,Female 25 - 34,0.4491240689906303
+Gender Age,Female 35 - 44,0.45115609442050497
+Gender Age,Female 45 - 54,0.47738251914102386
+Gender Age,Female > 54,0.4839977743476097
+Gender,Male,0.5470923367222742
+Gender,Female,0.4725998136255519
+Age,18 - 24,0.4498022908566233
+Age,25 - 34,0.4748094866431302
+Age,35 - 44,0.4899861173346484
+Age,45 - 54,0.5210784867017837
+Age,> 54,0.5179782249136812
+Race,White,0.5786155741719442
+Race,Hispanic,0.2927486060162333
+Race,Black,0.10940369193007976
+Race,Other,0.42639418224573883
