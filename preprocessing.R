@@ -20,5 +20,6 @@ load('Data/projection_space_national_18-10_02.RData')
 population <- pops %>%
   mutate(education = ifelse(education=='No college', 'No Bachelors', 'Bachelors')) %>%
   group_by(age, urbanicity, gender, state, race, education, married, party, congressional_district) %>%
-  summarise(N = sum(N))
+  summarise(N = sum(N)) %>%
+  rename(district = congressional_district)
 write_csv(population, 'Data/population_data.csv')

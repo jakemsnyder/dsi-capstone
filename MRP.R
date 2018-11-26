@@ -8,7 +8,8 @@ demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
                               combn(demographics, simplify=FALSE, 4),
                               combn(demographics, simplify=FALSE, 5),
                               combn(demographics, simplify=FALSE, 6),
-                              combn(demographics, simplify=FALSE, 7))
+                              combn(demographics, simplify=FALSE, 7),
+                              'district')
 
 generic <- read_csv('all_generic_with_districts.csv',
                     col_types=cols(party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
@@ -20,8 +21,8 @@ generic <- read_csv('all_generic_with_districts.csv',
                                    vote2018 = col_character(),
                                    married = col_factor(levels=c('Unmarried', 'Married')),
                                    state = col_skip(),
-                                   wave = col_skip())) %>%
-    mutate(district = factor(district))%>%
+                                   wave = col_skip(),
+                                   district = col_factor())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
@@ -43,15 +44,7 @@ specific <- read_csv('all_specific.csv',
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
 
-## population preprocessing
-load('projection_space_national_18-10_02.RData')
-population <- pops %>%
-    mutate(education = ifelse(education=='No college', 'No Bachelors', 'Bachelors')) %>%
-    group_by(age, urbanicity, gender, state, race, education, married, party, congressional_district) %>%
-    summarise(N = sum(N))
-write_csv(population, 'population_data.csv')
-
-pops <- read_csv('population_data.csv',
+pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=levels(generic$age)),
                                 urbanicity = col_factor(levels=levels(generic$urbanicity)),
                                 gender = col_factor(levels=levels(generic$gender)),
@@ -60,12 +53,14 @@ pops <- read_csv('population_data.csv',
                                 education = col_factor(levels=levels(generic$education)),
                                 married = col_factor(levels=levels(generic$married)),
                                 party = col_factor(levels=levels(generic$party)),
-                                congressional_district = col_skip(),
+                                district = col_factor(levels=levels(generic$district)),
                                 N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 # generic mrp
-generic_m <- multinom(vote2018 ~ (age + urbanicity + gender + race + education + married)^2, generic, maxit=1000)
+generic_m <- multinom(vote2018 ~ (party + age + urbanicity + gender + race + education + married)^2 + district,
+                      generic, maxit=1000)
+# pred_pops <- select(pred_pops, district, age, urbanicity, gender, race, education, married, N)
 pred <- predict(generic_m, pred_pops, 'probs')
 
 pred_pops$pred_val = pred_pops$N * pred
@@ -85,7 +80,8 @@ for(i in 1:length(demographic_combinations)){
 write_csv(df, 'Output/generic_mrp_results.csv')
 
 # specific mrp
-specific_m <- multinom(vote2018 ~ district+(age + urbanicity + gender + race + education + married)^2, specific, maxit=1000)
+specific_m <- multinom(vote2018 ~ district + (party + age + urbanicity + gender + race + education + married)^2,
+                       specific, maxit=1000)
 pred <- predict(specific_m, pred_pops, 'probs')
 
 pred_pops$pred_val = pred_pops$N * pred
