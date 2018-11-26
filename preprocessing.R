@@ -21,5 +21,9 @@ population <- pops %>%
   mutate(education = ifelse(education=='No college', 'No Bachelors', 'Bachelors')) %>%
   group_by(age, urbanicity, gender, state, race, education, married, party, congressional_district) %>%
   summarise(N = sum(N)) %>%
-  rename(district = congressional_district)
+  rename(district = congressional_district)%>%
+  #Change district to factor
+    mutate(district = as.numeric(district))%>%
+    mutate(district = sprintf("%02d",district))%>%
+    unite(state_district, state, district, sep = '',remove =FALSE)
 write_csv(population, 'Data/population_data.csv')
