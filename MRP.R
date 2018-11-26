@@ -21,9 +21,8 @@ generic <- read_csv('Data/all_generic_with_districts.csv',
                                    vote2018 = col_character(),
                                    married = col_factor(levels=c('Unmarried', 'Married')),
                                    state = col_skip(),
-                                   wave = col_skip(),
-                                   district = col_skip())) %>%
-    mutate(district = as.factor(district))%>%
+                                   wave = col_skip())) %>%
+    mutate(district = factor(district))%>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
@@ -54,7 +53,7 @@ pops <- read_csv('Data/population_data.csv',
                                 education = col_factor(levels=levels(generic$education)),
                                 married = col_factor(levels=levels(generic$married)),
                                 party = col_factor(levels=levels(generic$party)),
-                                state_district = col_factor(levels=levels(generic$district)),
+                                district = col_factor(levels=levels(generic$district)),
                                 N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
