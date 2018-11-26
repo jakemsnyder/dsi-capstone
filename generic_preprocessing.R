@@ -1,10 +1,9 @@
+library(tidyverse)
+
 # Tidy the specific question data into generic ballot format
 # setwd('D:/Capstone_GitHub/data/')
 
-library(tidyverse)
-library(readxl)
 load("Data/generic_ballot.RData")
-
 generic <- voting2018
 
 # lowercase batch 1 columns to match 2nd batch
@@ -52,8 +51,9 @@ for (i in datasets){
   i <- i %>% select(generic_colnames)
   all_generic <- rbind(all_generic, i)
 }
-
+all_generic <- all_generic %>%
+  mutate(race = fct_recode(race, Other = 'Other Race'))
 
 save(all_generic, file = "Data/all_generic.RData")
 write_csv(all_generic, 'Data/all_generic.csv')
-#load("all_generic.RData")
+#load("Data/all_generic.RData")
