@@ -1,0 +1,222 @@
+---
+title: "EDAV Capstone Progress 2"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(tidyr)  
+library(tidyverse)
+library(ggplot2)
+library(gridExtra)
+library(ggthemes)
+library(dplyr)
+library(GGally)
+library(vcd)
+library(extracat)
+library(DAAG)
+library(forcats)
+library(viridisLite)
+
+generic <- read.csv('~/Desktop/group-capstone/all_generic_with_districts.csv')
+
+specific <- read.csv('~/Desktop/group-capstone/all_specific.csv')
+
+
+
+
+    
+generic <- separate(data = generic, col = district, into = c("state", "district"), sep = "\\-")
+specific <- separate(data = specific, col = district, into = c("state", "district"), sep = "\\-")
+generic <- within(generic,  district <- paste(state, district, sep="-"))
+specific <- within(specific,  district <- paste(state, district, sep="-"))
+
+# write.csv(generic, 'all_generic_with_districts_foredav.csv')
+# write.csv(specific, 'all_specific_foredav.csv')
+
+genericdf <- as.tibble(generic)
+specificdf<-as.tibble(specific)
+
+genericdf <- genericdf %>%
+    filter(vote2018!='Will not vote')
+specificdf <- specificdf %>%
+    filter(vote2018!='Will not vote')
+```
+
+
+We'll first analyze the generic, then specific, then compare the two.
+
+```{r}
+##### Univariate Distribution Analysis #####
+
+#Political Party (Nominal)
+g1 <- ggplot(genericdf, aes(x=party)) + geom_bar(aes(fill=vote2018))+
+    xlab("Political Party")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Political Party in Generic Polling")
+
+# g1<- g1+scale_fill_manual(values = c("blue", "grey", "red"))
+g1
+ggsave(filename="Output/CountbyParty_generic.jpg", plot=g1)
+
+# Gender
+g2 <- ggplot(genericdf, aes(x=gender)) + geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Gender")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Gender in Generic Polling")
+
+g2<- g2 +scale_fill_manual(values = c("blue", "grey", "red"))
+g2
+ggsave(filename="Output/CountbyGender_generic_vote.jpg", plot=g2)
+
+# Race
+#Reordered by freq count
+genericdf$race <- factor(genericdf$race, levels = c('White', 'Hispanic', 'Other', 'Black'))
+
+g3 <- ggplot(genericdf, aes(x=race)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Race")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Race in Generic Polling")
+g3<- g3 +scale_fill_manual(values = c("blue", "grey", "red"))
+g3
+
+ggsave(filename="Output/CountbyRace_generic_vote.jpg", plot=g3)
+
+#Education
+genericdf$education <- factor(genericdf$education, levels = c('No Bachelors', 'Bachelors'))
+g4 <- ggplot(genericdf, aes(x=education)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Education")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Education in Generic Polling")
+g4<- g4 +scale_fill_manual(values = c("blue", "grey", "red"))
+
+ggsave(filename="Output/CountbyEdu_generic_vote.jpg", plot=g4)
+
+#Urbanicity 
+g6 <- ggplot(genericdf, aes(x=urbanicity)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Urbanicity")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Urbanicity in Generic Polling")
+g6
+
+ggsave(filename="Output/Countbyurban_generic_vote.jpg", plot=g6)
+
+#Marital Status
+genericdf$married <- factor(genericdf$married, levels = c('Unmarried', 'Married'))
+g7 <- ggplot(genericdf, aes(x=married)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Marital Status")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Marital Status in Generic Polling")
+g7<- g7 +scale_fill_manual(values = c("blue", "grey", "red"))
+g7
+ggsave(filename="Output/CountbyMarried_generic_vote.jpg", plot=g7)
+
+# Age
+g8 <- ggplot(genericdf, aes(fct_relevel(age, "> 54", after=4)))+
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Age")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Age in Generic Polling")
+
+g8<- g8 +scale_fill_manual(values = c("blue", "grey", "red"))
+g8
+
+ggsave(filename="Output/Countbyage_generic_vote.jpg", plot=g8)
+
+#### Specific
+g1 <- ggplot(specificdf, aes(x=party)) + geom_bar(aes(fill=party))+
+    xlab("Political Party")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Political Party in Specific Polling")
+
+g1<- g1+scale_fill_manual(values = c("blue", "grey", "red"))
+g1
+ggsave(filename="Output/CountbyParty_specific.jpg", plot=g1)
+
+# Gender
+g2 <- ggplot(specificdf, aes(x=gender)) + geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Gender")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Gender in Specific Polling")
+
+g2<- g2 +scale_fill_manual(values = c("blue", "grey", "red"))
+g2
+ggsave(filename="Output/CountbyGender_specific_vote.jpg", plot=g2)
+
+# Race
+#Reordered by freq count
+specificdf$race <- factor(specificdf$race, levels = c('White', 'Hispanic', 'Other', 'Black'))
+
+g3 <- ggplot(specificdf, aes(x=race)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Race")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Race in Specific Polling")
+g3<- g3 +scale_fill_manual(values = c("blue", "grey", "red"))
+g3
+
+ggsave(filename="Output/CountbyRace_specific_vote.jpg", plot=g3)
+
+#Education
+specificdf$education <- factor(specificdf$education, levels = c('No Bachelors', 'Bachelors'))
+g4 <- ggplot(specificdf, aes(x=education)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Education")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Education in Specific Polling")
+g4<- g4 +scale_fill_manual(values = c("blue", "grey", "red"))
+
+ggsave(filename="Output/CountbyEdu_specific_vote.jpg", plot=g4)
+
+#Urbanicity 
+g6 <- ggplot(specificdf, aes(x=urbanicity)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Urbanicity")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Urbanicity in Specific Polling")
+g6<- g6 +scale_fill_manual(values = c("blue", "grey", "red"))
+
+ggsave(filename="Output/Countbyurban_specific_vote.jpg", plot=g6)
+
+#Marital Status
+specificdf$married <- factor(specificdf$married, levels = c('Unmarried', 'Married'))
+g7 <- ggplot(specificdf, aes(x=married)) +
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Marital Status")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Marital Status in Specific Polling")
+g7<- g7 +scale_fill_manual(values = c("blue", "grey", "red"))
+
+ggsave(filename="Output/CountbyMarried_specific_vote.jpg", plot=g7)
+
+# Age
+g8 <- ggplot(specificdf, aes(fct_relevel(age, "> 54", after=4)))+
+    geom_bar(aes(fill=vote2018))+
+    geom_text(stat='count', aes(label=..count..), vjust=0)+
+    xlab("Age")+
+    ylab("Count")+
+    ggtitle("Respondent Count by Age in Specific Polling")
+g8<- g8 +scale_fill_manual(values = c("blue", "grey", "red"))
+
+ggsave(filename="Output/Countbyage_specific_vote.jpg", plot=g8)
+
+### 2D Explore: Vote2018 by demography
+
+
+```
+
+
