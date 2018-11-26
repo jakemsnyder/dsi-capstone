@@ -58,7 +58,7 @@ pops <- read_csv('Data/population_data.csv',
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 # generic mrp
-generic_m <- multinom(vote2018 ~ district+ (party + age + urbanicity + gender + race + education + married)^2 + district,
+generic_m <- multinom(vote2018 ~ district+ (party + age + urbanicity + gender + race + education + married)^2,
                       generic, maxit=1000)
 
 pred <- predict(generic_m, pred_pops, 'probs')
