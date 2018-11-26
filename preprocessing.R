@@ -25,5 +25,5 @@ population <- pops %>%
   #Change district to factor
     mutate(district = as.numeric(district))%>%
     mutate(district = sprintf("%02d",district))%>%
-    unite(state_district, state, district, sep = '',remove =FALSE)
+    unite(state_district, state, district, sep = '-',remove =FALSE)
 write_csv(population, 'Data/population_data.csv')

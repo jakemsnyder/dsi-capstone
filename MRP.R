@@ -11,7 +11,7 @@ demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
                               combn(demographics, simplify=FALSE, 7),
                               'district')
 
-generic <- read_csv('all_generic_with_districts.csv',
+generic <- read_csv('Data/all_generic_with_districts.csv',
                     col_types=cols(party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
                                    gender = col_factor(levels=c('Male', 'Female')),
                                    age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
@@ -22,13 +22,14 @@ generic <- read_csv('all_generic_with_districts.csv',
                                    married = col_factor(levels=c('Unmarried', 'Married')),
                                    state = col_skip(),
                                    wave = col_skip(),
-                                   district = col_factor())) %>%
+                                   district = col_skip())) %>%
+    mutate(district = as.factor(district))%>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
 
-specific <- read_csv('all_specific.csv',
+specific <- read_csv('Data/all_specific.csv',
                      col_types=cols(party = col_factor(levels=levels(generic$party)),
                                     gender = col_factor(levels=levels(generic$gender)),
                                     age = col_factor(levels=levels(generic$age)),
@@ -53,12 +54,12 @@ pops <- read_csv('Data/population_data.csv',
                                 education = col_factor(levels=levels(generic$education)),
                                 married = col_factor(levels=levels(generic$married)),
                                 party = col_factor(levels=levels(generic$party)),
-                                district = col_factor(levels=levels(generic$district)),
+                                state_district = col_factor(levels=levels(generic$district)),
                                 N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 # generic mrp
-generic_m <- multinom(vote2018 ~ (party + age + urbanicity + gender + race + education + married)^2 + district,
+generic_m <- multinom(vote2018 ~ district+ (party + age + urbanicity + gender + race + education + married)^2 + district,
                       generic, maxit=1000)
 
 pred <- predict(generic_m, pred_pops, 'probs')
