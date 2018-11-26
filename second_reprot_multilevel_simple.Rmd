@@ -167,7 +167,7 @@ library("optimx")
 
 
 ```{r}
-slopes_fit_generic2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + (1 + gender | state/district), data = generic, family = binomial(link = "logit"),
+slopes_fit_generic2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + gender | state/district), data = generic, family = binomial(link = "logit"),
      control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
 ```
@@ -175,7 +175,7 @@ slopes_fit_generic2 <- glmer(vote2018 ~ age + urbanicity + gender + race + educa
 
 
 ```{r}
-slopes_fit_specific2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + (1 + gender | state/district), data = specific, family = binomial(link = "logit"),
+slopes_fit_specific2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + gender | state/district), data = specific, family = binomial(link = "logit"),
      control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
 
