@@ -60,7 +60,7 @@ pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 # generic mrp
 generic_m <- multinom(vote2018 ~ (party + age + urbanicity + gender + race + education + married)^2 + district,
                       generic, maxit=1000)
-# pred_pops <- select(pred_pops, district, age, urbanicity, gender, race, education, married, N)
+
 pred <- predict(generic_m, pred_pops, 'probs')
 
 pred_pops$pred_val = pred_pops$N * pred
