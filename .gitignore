@@ -37,3 +37,6 @@ rsconnect/
 
 # proprietary data
 Data/
+
+# jupyter notebook checkpoints
+.ipynb_checkpoints/
