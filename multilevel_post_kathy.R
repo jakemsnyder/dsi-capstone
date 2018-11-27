@@ -6,6 +6,7 @@ install.packages("lme4")
 install.packages("genderdata_package")
 install.packages("gender")
 install.packages("merTools")
+install.packages('optimx')
 
 library(ggplot2)
 library(scales)
@@ -20,6 +21,7 @@ library(car)
 library(merTools)  
 library(tidyverse)
 library(nnet)
+library(optimx)
 
 demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
 demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
@@ -40,14 +42,16 @@ generic <- read_csv('Data/all_generic_with_districts.csv',
                                    urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
                                    vote2018 = col_character(),
                                    married = col_factor(levels=c('Unmarried', 'Married')),
-                                   state = col_skip(),
                                    wave = col_skip())) %>%
     mutate(district = factor(district))%>%
+    mutate(state = factor(state))%>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
 
+
+### Specific
 specific <- read_csv('Data/all_specific.csv',
                      col_types=cols(party = col_factor(levels=levels(generic$party)),
                                     gender = col_factor(levels=levels(generic$gender)),
@@ -57,23 +61,24 @@ specific <- read_csv('Data/all_specific.csv',
                                     urbanicity = col_factor(levels=levels(generic$urbanicity)),
                                     married = col_factor(levels=levels(generic$married)),
                                     vote2018 = col_character(),
-                                    district = col_factor(levels = levels(generic$district)),
                                     wave = col_skip())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
 
-generic <- separate(data = generic, col = district, into = c("state", "district"), sep = "\\-")
 specific <- separate(data = specific, col = district, into = c("state", "district"), sep = "\\-")
-generic <- within(generic,  district <- paste(state, district, sep="-"))
 specific <- within(specific,  district <- paste(state, district, sep="-"))
+specific<- specific %>%
+    mutate(state=factor(state)) %>%
+    mutate(district = factor(district))
 
 pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=levels(generic$age)),
                                 urbanicity = col_factor(levels=levels(generic$urbanicity)),
                                 gender = col_factor(levels=levels(generic$gender)),
-                                state = col_skip(),
+                                district = col_factor(levels = levels(generic$district)),
+                                state = col_factor(levels=levels(generic$state)),
                                 race = col_factor(levels=levels(generic$race)),
                                 education = col_factor(levels=levels(generic$education)),
                                 married = col_factor(levels=levels(generic$married)),
@@ -83,9 +88,11 @@ pops <- read_csv('Data/population_data.csv',
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 # generic mrp
-generic_m <- intercept_fit_generic <- glmer(vote2018 ~ age + urbanicity + gender + race + education + party + married + (1 | state/district), data = generic, family = binomial(link = "logit"))
+generic_m <- intercept_fit_generic <- glmer(vote2018 ~ age + urbanicity + gender + race + education + party + married + (1 | state/district), data = generic, family = binomial(link = "logit"),
+                                            control = glmerControl(optimizer = "optimx", calc.derivs = FALSE,
+                                                                  optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
 
-pred <- predict(generic_m, pred_pops, 'probs')
+pred <- predict(generic_m, pred_pops)
 
 pred_pops$pred_val = pred_pops$N * pred
 
@@ -104,7 +111,9 @@ for(i in 1:length(demographic_combinations)){
 write_csv(df, 'Output/generic_glmer_results.csv')
 
 # specific mrp
-specific_m <- intercept_fit_specific <- glmer(vote2018 ~ age + urbanicity + gender + race + education + party + married + (1 | state/district), data = specific, family = binomial(link = "logit"))
+specific_m <- intercept_fit_specific <- glmer(vote2018 ~ age + urbanicity + gender + race + education + party + married + (1 | state/district), data = specific, family = binomial(link = "logit"),
+                                              control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+                                                                    optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
 pred <- predict(specific_m, pred_pops, 'probs')
 
 pred_pops$pred_val = pred_pops$N * pred
