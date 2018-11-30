@@ -73,11 +73,14 @@ specific <- subset(specific, vote2018 != "Will not vote")
 ```
 
 
+<<<<<<< HEAD
 ## SUBSAMPLING FROM THE GENERIC SAMPLE TO MATCH THE SIZE OF THE SPECIFIC DATASET 
 ```{r}
 generic_sample <- sample_n(generic, 6209)
 ```
 
+=======
+>>>>>>> origin/master
 
 ```{r}
 intercept_fit_specific <- glmer(vote2018 ~ age + urbanicity + gender + race + education + party + married + (1 | state/district), data = specific, family = binomial(link = "logit"))
@@ -170,16 +173,25 @@ binnedplot(generic$fitted_gen, generic$resid_gen)
 library("optimx")
 ```
 
+<<<<<<< HEAD
 ```{r}
 slopes_fit_specific <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + gender | state/district), data = specific, family = binomial(link = "logit"),
      control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
 
+=======
+
+```{r}
+slopes_fit_generic2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + gender | state/district), data = generic, family = binomial(link = "logit"),
+     control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+     optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+>>>>>>> origin/master
 ```
 
 
 
 ```{r}
+<<<<<<< HEAD
 slopes_fit_generic <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + gender | state/district), data = generic, family = binomial(link = "logit"),
      control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
@@ -190,12 +202,27 @@ slopes_fit_generic <- glmer(vote2018 ~ age + urbanicity + gender + race + educat
 
 ```{r}
 display(slopes_fit_specific)
+=======
+slopes_fit_specific2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + gender | state/district), data = specific, family = binomial(link = "logit"),
+     control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+     optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+
+```
+
+
+```{r}
+display(slopes_fit_specific2)
+>>>>>>> origin/master
 ```
 
 
 
 ```{r}
+<<<<<<< HEAD
 display(slopes_fit_generic)
+=======
+display(slopes_fit_generic2)
+>>>>>>> origin/master
 ```
 
 
@@ -254,6 +281,26 @@ binnedplot(generic$fitted_gen_slope, generic$resid_gen_slope)
 
 
 ```{r}
+<<<<<<< HEAD
+=======
+slopes_fit_generic3 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + gender | state/district), data = generic, family = binomial(link = "logit"),
+     control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+     optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+```
+
+
+
+```{r}
+slopes_fit_specific3 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + party + (1 + gender | state/district), data = specific, family = binomial(link = "logit"),
+     control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
+     optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))
+
+```
+
+
+
+```{r}
+>>>>>>> origin/master
 slopes_fit_generic3 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + party + age*gender + (1 + gender + age | state/district), data = generic, family = binomial(link = "logit"),
      control = lmerControl(optimizer = "optimx", calc.derivs = FALSE,
      optCtrl = list(method = "nlminb", starttests = FALSE, kkt = FALSE)))

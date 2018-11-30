@@ -8,9 +8,10 @@ demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
                               combn(demographics, simplify=FALSE, 4),
                               combn(demographics, simplify=FALSE, 5),
                               combn(demographics, simplify=FALSE, 6),
-                              combn(demographics, simplify=FALSE, 7))
+                              combn(demographics, simplify=FALSE, 7),
+                              'district')
 
-generic <- read_csv('Data/all_generic.csv',
+generic <- read_csv('Data/all_generic_with_districts.csv',
                     col_types=cols(party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
                                    gender = col_factor(levels=c('Male', 'Female')),
                                    age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
@@ -19,7 +20,9 @@ generic <- read_csv('Data/all_generic.csv',
                                    urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
                                    vote2018 = col_character(),
                                    married = col_factor(levels=c('Unmarried', 'Married')),
+                                   state = col_skip(),
                                    wave = col_skip())) %>%
+    mutate(district = factor(district))%>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
@@ -34,7 +37,7 @@ specific <- read_csv('Data/all_specific.csv',
                                     urbanicity = col_factor(levels=levels(generic$urbanicity)),
                                     married = col_factor(levels=levels(generic$married)),
                                     vote2018 = col_character(),
-                                    district = col_skip(),
+                                    district = col_factor(levels = levels(generic$district)),
                                     wave = col_skip())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
@@ -50,12 +53,14 @@ pops <- read_csv('Data/population_data.csv',
                                 education = col_factor(levels=levels(generic$education)),
                                 married = col_factor(levels=levels(generic$married)),
                                 party = col_factor(levels=levels(generic$party)),
-                                congressional_district = col_skip(),
+                                district = col_factor(levels=levels(generic$district)),
                                 N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 # generic mrp
-generic_m <- multinom(vote2018 ~ (age + urbanicity + gender + race + education + married)^2, generic, maxit=1000)
+generic_m <- multinom(vote2018 ~ district+ (party + age + urbanicity + gender + race + education + married)^2,
+                      generic, maxit=1000)
+
 pred <- predict(generic_m, pred_pops, 'probs')
 
 pred_pops$pred_val = pred_pops$N * pred
@@ -75,7 +80,8 @@ for(i in 1:length(demographic_combinations)){
 write_csv(df, 'Output/generic_mrp_results.csv')
 
 # specific mrp
-specific_m <- multinom(vote2018 ~ (age + urbanicity + gender + race + education + married)^2, specific, maxit=1000)
+specific_m <- multinom(vote2018 ~ district + (party + age + urbanicity + gender + race + education + married)^2,
+                       specific, maxit=1000)
 pred <- predict(specific_m, pred_pops, 'probs')
 
 pred_pops$pred_val = pred_pops$N * pred
