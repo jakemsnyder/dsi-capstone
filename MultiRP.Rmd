@@ -1,5 +1,5 @@
 ---
-title: "stanMRPattempt"
+title: "stanMRP"
 author: "Tin Oreskovic"
 date: "11/30/2018"
 output: html_document
@@ -32,11 +32,12 @@ pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
                                 gender = col_factor(levels=c('Male', 'Female')),
+                                district = col_factor(NULL),
+                                state = col_skip(),
                                 race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
                                 education = col_factor(levels=c('No Bachelors', 'Bachelors')),
                                 married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
-                                district = col_factor(NULL),
+                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
                                 N = col_double()))
 
 generic_s <- read_csv('Data/all_generic_with_districts.csv',
@@ -48,12 +49,12 @@ generic_s <- read_csv('Data/all_generic_with_districts.csv',
                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
                                    vote2018 = col_character(),
                                    married = col_factor(levels=levels(pops$married)),
-                                   district = col_factor(NULL),
+                                   district = col_factor(levels=levels(pops$district)),
                                    state = col_skip(),
                                    wave = col_skip())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
-  filter(!is.na(vote2018)) %>%
+  filter(!is.na(vote2018) & !is.na(district)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican'))) %>%
   sample_n(6209)
 
@@ -61,9 +62,10 @@ pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
 #generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
-generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = generic_s, family = binomial(link = "logit"))
+generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
+                   data = generic_s, family = binomial(link = "logit"))
 
-pred <- predict(generic_m, newdata = pred_pops, type= "response")
+pred <- predict(generic_m, newdata = pred_pops, type="response", allow.new.levels = TRUE)
 
 pred_pops$pred_val = pred_pops$N * pred
 
@@ -104,11 +106,12 @@ pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
                                 gender = col_factor(levels=c('Male', 'Female')),
+                                district = col_factor(NULL),
+                                state = col_skip(),
                                 race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
                                 education = col_factor(levels=c('No Bachelors', 'Bachelors')),
                                 married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
-                                district = col_factor(NULL),
+                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
                                 N = col_double()))
 
 generic_s <- read_csv('Data/all_generic_with_districts.csv',
@@ -120,7 +123,7 @@ generic_s <- read_csv('Data/all_generic_with_districts.csv',
                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
                                    vote2018 = col_character(),
                                    married = col_factor(levels=levels(pops$married)),
-                                   district = col_factor(NULL),
+                                   district = col_factor(levels=levels(pops$district)),
                                    state = col_skip(),
                                    wave = col_skip())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
@@ -131,11 +134,12 @@ generic_s <- read_csv('Data/all_generic_with_districts.csv',
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
-generic_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender | district), data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+generic_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender | district),
+                    data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
 #generic_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district), data = generic_s, family = binomial(link = "logit"))
 
-pred <- predict(generic_m2, newdata = pred_pops, type= "response")
+pred <- predict(generic_m2, newdata = pred_pops, type= "response", allow.new.levels = TRUE)
 
 pred_pops$pred_val = pred_pops$N * pred
 
@@ -162,11 +166,12 @@ pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
                                 gender = col_factor(levels=c('Male', 'Female')),
+                                district = col_factor(NULL),
+                                state = col_skip(),
                                 race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
                                 education = col_factor(levels=c('No Bachelors', 'Bachelors')),
                                 married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
-                                district = col_factor(NULL),
+                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
                                 N = col_double()))
 
 specific_s <- read_csv('Data/all_specific.csv',
@@ -189,9 +194,10 @@ specific_s <- read_csv('Data/all_specific.csv',
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
 
-specific_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+specific_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
+                    data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
-pred <- predict(specific_m, newdata = pred_pops, type= "response")
+pred <- predict(specific_m, newdata=pred_pops, type="response", allow.new.levels = TRUE)
 
 pred_pops$pred_val = pred_pops$N * pred
 
@@ -220,11 +226,12 @@ pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
                                 gender = col_factor(levels=c('Male', 'Female')),
+                                district = col_factor(NULL),
+                                state = col_skip(),
                                 race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
                                 education = col_factor(levels=c('No Bachelors', 'Bachelors')),
                                 married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
-                                district = col_factor(NULL),
+                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
                                 N = col_double()))
 
 specific_s <- read_csv('Data/all_specific.csv',
@@ -246,9 +253,10 @@ specific_s <- read_csv('Data/all_specific.csv',
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
 
-specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district), data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district),
+                     data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
-pred <- predict(specific_m2, newdata = pred_pops, type= "response")
+pred <- predict(specific_m2, newdata=pred_pops, type="response", allow.new.levels = TRUE)
 
 pred_pops$pred_val = pred_pops$N * pred
 
@@ -281,11 +289,12 @@ pops2 <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
                                 gender = col_factor(levels=c('Male', 'Female')),
+                                district = col_factor(NULL),
+                                state = col_skip(),
                                 race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
                                 education = col_factor(levels=c('No Bachelors', 'Bachelors')),
                                 married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
-                                district = col_factor(NULL),
+                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
                                 N = col_double()))
 
 specific_s <- read_csv('Data/all_specific.csv',
@@ -308,8 +317,9 @@ specific_s <- read_csv('Data/all_specific.csv',
 pred_pops2 <- pops2 %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
 
-specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
-pred2 <- predict(specific_m2, newdata = pred_pops2, type= "response")
+specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
+                     data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+pred2 <- predict(specific_m2, newdata=pred_pops2, type="response", allow.new.levels = TRUE)
 
 
 pred_pops2$pred_val = pred_pops2$N * pred2
