@@ -15,7 +15,7 @@ library(optimx)
 ```
 
 ## ANEW
-```{r}
+```{r generic}
 set.seed(42)
 
 demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
@@ -63,7 +63,8 @@ pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 #generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
 generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
-                   data = generic_s, family = binomial(link = "logit"))
+                   data = generic_s, family = binomial(link = "logit"),
+                   control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
 pred <- predict(generic_m, newdata = pred_pops, type="response", allow.new.levels = TRUE)
 
@@ -89,7 +90,7 @@ write_csv(df, 'Output/generic_mrp_results_district.csv')
 "Parameters or bounds appear to have different scalings.
   This can cause poor performance in optimization. 
   It is important for derivative free methods like BOBYQA, UOBYQA, NEWUOA.unable to evaluate scaled gradientModel failed to converge: degenerate  Hessian with 1 negative eigenvalues"
-```{r}
+```{r generic_var_slopes}
 set.seed(42)
 
 demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
@@ -161,7 +162,7 @@ write_csv(df, 'Output/generic_mrp_results_district_slopes.csv')
 
 # SPECIFIC
 
-```{r}
+```{r specific}
 pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
@@ -195,7 +196,8 @@ pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
 
 specific_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
-                    data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+                    data = specific_s, family = binomial(link = "logit"),
+                    control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
 pred <- predict(specific_m, newdata=pred_pops, type="response", allow.new.levels = TRUE)
 
@@ -221,7 +223,7 @@ write_csv(df, 'Output/specific_mrp_results_district.csv')
 "Parameters or bounds appear to have different scalings.
   This can cause poor performance in optimization. 
   It is important for derivative free methods like BOBYQA, UOBYQA, NEWUOA."
-```{r}
+```{r specific_var_slopes}
 pops <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
@@ -254,7 +256,8 @@ pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
 
 specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district),
-                     data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+                     data = specific_s, family = binomial(link = "logit"),
+                     control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
 pred <- predict(specific_m2, newdata=pred_pops, type="response", allow.new.levels = TRUE)
 
@@ -284,7 +287,7 @@ write_csv(df, 'Output/specific_mrp_results_district_slopes.csv')
 
 ## IF WE EVER WANT THE NESTED MODELS:
 
-```{r}
+```{r nested}
 pops2 <- read_csv('Data/population_data.csv',
                  col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
                                 urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
@@ -318,7 +321,8 @@ pred_pops2 <- pops2 %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
 
 specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
-                     data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+                     data = specific_s, family = binomial(link = "logit"),
+                     control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 pred2 <- predict(specific_m2, newdata=pred_pops2, type="response", allow.new.levels = TRUE)
 
 
