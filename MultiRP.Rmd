@@ -28,15 +28,26 @@ demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
                               combn(demographics, simplify=FALSE, 7),
                               'district')
 
+pops <- read_csv('Data/population_data.csv',
+                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                gender = col_factor(levels=c('Male', 'Female')),
+                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                married = col_factor(levels=c('Unmarried', 'Married')),
+                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
+                                district = col_factor(NULL),
+                                N = col_double()))
+
 generic_s <- read_csv('Data/all_generic_with_districts.csv',
-                    col_types=cols(party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
-                                   gender = col_factor(levels=c('Male', 'Female')),
-                                   age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
-                                   race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
-                                   education = col_factor(levels=c('No Bachelors', 'Bachelors')),
-                                   urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                    col_types=cols(party = col_factor(levels=levels(pops$party)),
+                                   gender = col_factor(levels=levels(pops$gender)),
+                                   age = col_factor(levels=levels(pops$age)),
+                                   race = col_factor(levels=levels(pops$race)),
+                                   education = col_factor(levels=levels(pops$education)),
+                                   urbanicity = col_factor(levels=levels(pops$urbanicity)),
                                    vote2018 = col_character(),
-                                   married = col_factor(levels=c('Unmarried', 'Married')),
+                                   married = col_factor(levels=levels(pops$married)),
                                    district = col_factor(NULL),
                                    state = col_skip(),
                                    wave = col_skip())) %>%
@@ -45,17 +56,6 @@ generic_s <- read_csv('Data/all_generic_with_districts.csv',
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican'))) %>%
   sample_n(6209)
-
-pops <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=levels(generic_s$age)),
-                                urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
-                                gender = col_factor(levels=levels(generic_s$gender)),
-                                race = col_factor(levels=levels(generic_s$race)),
-                                education = col_factor(levels=levels(generic_s$education)),
-                                married = col_factor(levels=levels(generic_s$married)),
-                                party = col_factor(levels=levels(generic_s$party)),
-                                district = col_factor(levels=levels(generic_s$district)),
-                                N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
@@ -100,15 +100,26 @@ demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
                               combn(demographics, simplify=FALSE, 7),
                               'district')
 
+pops <- read_csv('Data/population_data.csv',
+                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                gender = col_factor(levels=c('Male', 'Female')),
+                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                married = col_factor(levels=c('Unmarried', 'Married')),
+                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
+                                district = col_factor(NULL),
+                                N = col_double()))
+
 generic_s <- read_csv('Data/all_generic_with_districts.csv',
-                    col_types=cols(party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
-                                   gender = col_factor(levels=c('Male', 'Female')),
-                                   age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
-                                   race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
-                                   education = col_factor(levels=c('No Bachelors', 'Bachelors')),
-                                   urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                    col_types=cols(party = col_factor(levels=levels(pops$party)),
+                                   gender = col_factor(levels=levels(pops$gender)),
+                                   age = col_factor(levels=levels(pops$age)),
+                                   race = col_factor(levels=levels(pops$race)),
+                                   education = col_factor(levels=levels(pops$education)),
+                                   urbanicity = col_factor(levels=levels(pops$urbanicity)),
                                    vote2018 = col_character(),
-                                   married = col_factor(levels=c('Unmarried', 'Married')),
+                                   married = col_factor(levels=levels(pops$married)),
                                    district = col_factor(NULL),
                                    state = col_skip(),
                                    wave = col_skip())) %>%
@@ -117,17 +128,6 @@ generic_s <- read_csv('Data/all_generic_with_districts.csv',
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican'))) %>%
   sample_n(6209)
-
-pops <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=levels(generic_s$age)),
-                                urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
-                                gender = col_factor(levels=levels(generic_s$gender)),
-                                race = col_factor(levels=levels(generic_s$race)),
-                                education = col_factor(levels=levels(generic_s$education)),
-                                married = col_factor(levels=levels(generic_s$married)),
-                                party = col_factor(levels=levels(generic_s$party)),
-                                district = col_factor(levels=levels(generic_s$district)),
-                                N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
@@ -158,32 +158,33 @@ write_csv(df, 'Output/generic_mrp_results_district_slopes.csv')
 # SPECIFIC
 
 ```{r}
+pops <- read_csv('Data/population_data.csv',
+                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                gender = col_factor(levels=c('Male', 'Female')),
+                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                married = col_factor(levels=c('Unmarried', 'Married')),
+                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
+                                district = col_factor(NULL),
+                                N = col_double()))
+
 specific_s <- read_csv('Data/all_specific.csv',
-                     col_types=cols(party = col_factor(levels=levels(generic_s$party)),
-                                    gender = col_factor(levels=levels(generic_s$gender)),
-                                    age = col_factor(levels=levels(generic_s$age)),
-                                    race = col_factor(levels=levels(generic_s$race)),
-                                    education = col_factor(levels=levels(generic_s$education)),
-                                    urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
-                                    married = col_factor(levels=levels(generic_s$married)),
+                     col_types=cols(party = col_factor(levels=levels(pops$party)),
+                                    gender = col_factor(levels=levels(pops$gender)),
+                                    age = col_factor(levels=levels(pops$age)),
+                                    race = col_factor(levels=levels(pops$race)),
+                                    education = col_factor(levels=levels(pops$education)),
+                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
+                                    married = col_factor(levels=levels(pops$married)),
                                     vote2018 = col_character(),
-                                    district = col_factor(levels = levels(generic_s$district)),
+                                    district = col_factor(levels = levels(pops$district)),
                                     wave = col_skip())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
 
-pops <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=levels(generic_s$age)),
-                                urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
-                                gender = col_factor(levels=levels(generic_s$gender)),
-                                race = col_factor(levels=levels(generic_s$race)),
-                                education = col_factor(levels=levels(generic_s$education)),
-                                married = col_factor(levels=levels(generic_s$married)),
-                                party = col_factor(levels=levels(generic_s$party)),
-                                district = col_factor(levels=levels(generic_s$district)),
-                                N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
@@ -215,32 +216,32 @@ write_csv(df, 'Output/specific_mrp_results_district.csv')
   This can cause poor performance in optimization. 
   It is important for derivative free methods like BOBYQA, UOBYQA, NEWUOA."
 ```{r}
+pops <- read_csv('Data/population_data.csv',
+                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                gender = col_factor(levels=c('Male', 'Female')),
+                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                married = col_factor(levels=c('Unmarried', 'Married')),
+                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
+                                district = col_factor(NULL),
+                                N = col_double()))
+
 specific_s <- read_csv('Data/all_specific.csv',
-                     col_types=cols(party = col_factor(levels=levels(generic_s$party)),
-                                    gender = col_factor(levels=levels(generic_s$gender)),
-                                    age = col_factor(levels=levels(generic_s$age)),
-                                    race = col_factor(levels=levels(generic_s$race)),
-                                    education = col_factor(levels=levels(generic_s$education)),
-                                    urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
-                                    married = col_factor(levels=levels(generic_s$married)),
+                     col_types=cols(party = col_factor(levels=levels(pops$party)),
+                                    gender = col_factor(levels=levels(pops$gender)),
+                                    age = col_factor(levels=levels(pops$age)),
+                                    race = col_factor(levels=levels(pops$race)),
+                                    education = col_factor(levels=levels(pops$education)),
+                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
+                                    married = col_factor(levels=levels(pops$married)),
                                     vote2018 = col_character(),
-                                    district = col_factor(levels = levels(generic_s$district)),
+                                    district = col_factor(levels = levels(pops$district)),
                                     wave = col_skip())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
-
-pops <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=levels(generic_s$age)),
-                                urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
-                                gender = col_factor(levels=levels(generic_s$gender)),
-                                race = col_factor(levels=levels(generic_s$race)),
-                                education = col_factor(levels=levels(generic_s$education)),
-                                married = col_factor(levels=levels(generic_s$married)),
-                                party = col_factor(levels=levels(generic_s$party)),
-                                district = col_factor(levels=levels(generic_s$district)),
-                                N = col_double()))
 
 pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
@@ -276,34 +277,33 @@ write_csv(df, 'Output/specific_mrp_results_district_slopes.csv')
 ## IF WE EVER WANT THE NESTED MODELS:
 
 ```{r}
+pops2 <- read_csv('Data/population_data.csv',
+                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                gender = col_factor(levels=c('Male', 'Female')),
+                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                married = col_factor(levels=c('Unmarried', 'Married')),
+                                party = col_factor(levels=c('Democrat', 'Republican', 'Independent')),
+                                district = col_factor(NULL),
+                                N = col_double()))
+
 specific_s <- read_csv('Data/all_specific.csv',
-                     col_types=cols(party = col_factor(levels=levels(generic_s$party)),
-                                    gender = col_factor(levels=levels(generic_s$gender)),
-                                    age = col_factor(levels=levels(generic_s$age)),
-                                    race = col_factor(levels=levels(generic_s$race)),
-                                    education = col_factor(levels=levels(generic_s$education)),
-                                    urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
-                                    married = col_factor(levels=levels(generic_s$married)),
+                     col_types=cols(party = col_factor(levels=levels(pops2$party)),
+                                    gender = col_factor(levels=levels(pops2$gender)),
+                                    age = col_factor(levels=levels(pops2$age)),
+                                    race = col_factor(levels=levels(pops2$race)),
+                                    education = col_factor(levels=levels(pops2$education)),
+                                    urbanicity = col_factor(levels=levels(pops2$urbanicity)),
+                                    married = col_factor(levels=levels(pops2$married)),
                                     vote2018 = col_character(),
-                                    district = col_factor(levels = levels(generic_s$district)),
+                                    district = col_factor(levels = levels(pops2$district)),
                                     wave = col_skip())) %>%
   mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
                               vote2018 == 'Republican candidate' ~ 'Republican')) %>%
   filter(!is.na(vote2018)) %>%
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')),
          state = str_sub(district, 0, 2))
-
-pops2 <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=levels(specific_s$age)),
-                                urbanicity = col_factor(levels=levels(specific_s$urbanicity)),
-                                gender = col_factor(levels=levels(specific_s$gender)),
-                                race = col_factor(levels=levels(specific_s$race)),
-                                education = col_factor(levels=levels(specific_s$education)),
-                                married = col_factor(levels=levels(specific_s$married)),
-                                party = col_factor(levels=levels(specific_s$party)),
-                                district = col_factor(levels=levels(specific_s$district)),
-			                          state = col_factor(levels=levels(specific_s$state)),
-                                N = col_double()))
 
 pred_pops2 <- pops2 %>% group_by_if(is.factor) %>% summarise(N=sum(N))
 
