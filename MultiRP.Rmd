@@ -1,0 +1,581 @@
+---
+title: "stanMRPattempt"
+author: "Tin Oreskovic"
+date: "11/30/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##ANEW
+
+```{r}
+#install.packages("optimx")
+```
+
+```{r}
+library(tidyverse)
+library(nnet)
+library(rstanarm)
+library(lme4)
+library(optimx)
+
+set.seed(42)
+
+demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
+demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
+                              combn(demographics, simplify=FALSE, 2),
+                              combn(demographics, simplify=FALSE, 3),
+                              combn(demographics, simplify=FALSE, 4),
+                              combn(demographics, simplify=FALSE, 5),
+                              combn(demographics, simplify=FALSE, 6),
+                              combn(demographics, simplify=FALSE, 7),
+                              'district')
+
+generic_s <- read_csv('~/Desktop/capstone/all_generic_with_districts.csv',
+                    col_types=cols(party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
+                                   gender = col_factor(levels=c('Male', 'Female')),
+                                   age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                   race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                   education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                   urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                   vote2018 = col_character(),
+                                   married = col_factor(levels=c('Unmarried', 'Married')),
+                                   state = col_skip(),
+                                   wave = col_skip())) %>%
+    mutate(district = factor(district))%>%
+  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
+                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
+  filter(!is.na(vote2018)) %>%
+  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
+
+generic_s <- sample_n(generic_s, 6209)
+
+pops <- read_csv('~/Desktop/capstone/population_data.csv',
+                 col_types=cols(age = col_factor(levels=levels(generic_s$age)),
+                                urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
+                                gender = col_factor(levels=levels(generic_s$gender)),
+                                race = col_factor(levels=levels(generic_s$race)),
+                                education = col_factor(levels=levels(generic_s$education)),
+                                married = col_factor(levels=levels(generic_s$married)),
+                                party = col_factor(levels=levels(generic_s$party)),
+                                district = col_factor(levels=levels(generic_s$district)),
+                                N = col_double()))
+
+
+colnames(pops) <- c("age","urbanicity","gender","state","race","education","married","party","district", "N")
+library("stringr")                                             
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = '00', 
+    replacement = 'zz'
+)
+pops$district <- str_replace(
+  pops$district,
+  pattern = '0', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = 'zz', 
+    replacement = '0'
+)
+
+
+pops$state <- paste(pops$state,"-")
+pops$district <- paste(pops$state,pops$district)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+
+pops$district <- as.factor(pops$district)
+
+pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+
+pred_pops <- pred_pops[(pred_pops$district %in% generic_s$district),]
+
+library(lme4)
+
+#generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+
+generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = generic_s, family = binomial(link = "logit"))
+
+pred <- predict(generic_m, newdata = pred_pops, type= "response")
+
+pred_pops$pred_val = pred_pops$N * pred
+
+df <- list(Demographic_Type = 'National', Demographic = 'National',
+           Vote_R = sum(pred_pops$pred_val)/sum(pred_pops$N)) %>% as.tibble()
+for(i in 1:length(demographic_combinations)){
+  vars = demographic_combinations[[i]]
+  temp = pred_pops %>% group_by_(.dots = lapply(vars, as.symbol)) %>%
+    summarise(Vote_R = sum(pred_val) / sum(N)) %>%
+    unite_(col='Demographic', vars, sep=' ') %>%
+    mutate(Demographic_Type = str_to_title(str_flatten(vars, collapse=' ')))
+  
+  df <- bind_rows(df, temp)
+}
+
+write_csv(df, '~/Desktop/capstone/generic_mrp_results_district.csv')
+```
+
+
+
+# VARYING SLOPES GENERIC 
+"Parameters or bounds appear to have different scalings.
+  This can cause poor performance in optimization. 
+  It is important for derivative free methods like BOBYQA, UOBYQA, NEWUOA.unable to evaluate scaled gradientModel failed to converge: degenerate  Hessian with 1 negative eigenvalues"
+```{r}
+library(tidyverse)
+library(nnet)
+library(rstanarm)
+library(lme4)
+
+set.seed(42)
+
+demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
+demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
+                              combn(demographics, simplify=FALSE, 2),
+                              combn(demographics, simplify=FALSE, 3),
+                              combn(demographics, simplify=FALSE, 4),
+                              combn(demographics, simplify=FALSE, 5),
+                              combn(demographics, simplify=FALSE, 6),
+                              combn(demographics, simplify=FALSE, 7),
+                              'district')
+
+generic_s <- read_csv('~/Desktop/capstone/all_generic_with_districts.csv',
+                    col_types=cols(party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
+                                   gender = col_factor(levels=c('Male', 'Female')),
+                                   age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                   race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                   education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                   urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                   vote2018 = col_character(),
+                                   married = col_factor(levels=c('Unmarried', 'Married')),
+                                   state = col_skip(),
+                                   wave = col_skip())) %>%
+    mutate(district = factor(district))%>%
+  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
+                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
+  filter(!is.na(vote2018)) %>%
+  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
+
+generic_s <- sample_n(generic_s, 6209)
+
+pops <- read_csv('~/Desktop/capstone/population_data.csv',
+                 col_types=cols(age = col_factor(levels=levels(generic_s$age)),
+                                urbanicity = col_factor(levels=levels(generic_s$urbanicity)),
+                                gender = col_factor(levels=levels(generic_s$gender)),
+                                race = col_factor(levels=levels(generic_s$race)),
+                                education = col_factor(levels=levels(generic_s$education)),
+                                married = col_factor(levels=levels(generic_s$married)),
+                                party = col_factor(levels=levels(generic_s$party)),
+                                district = col_factor(levels=levels(generic_s$district)),
+                                N = col_double()))
+
+
+colnames(pops) <- c("age","urbanicity","gender","state","race","education","married","party","district", "N")
+library("stringr")                                             
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = '00', 
+    replacement = 'zz'
+)
+pops$district <- str_replace(
+  pops$district,
+  pattern = '0', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = 'zz', 
+    replacement = '0'
+)
+
+
+pops$state <- paste(pops$state,"-")
+pops$district <- paste(pops$state,pops$district)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+
+pops$district <- as.factor(pops$district)
+
+pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+
+pred_pops <- pred_pops[(pred_pops$district %in% generic_s$district),]
+
+library(lme4)
+
+generic_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender | district), data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+
+#generic_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district), data = generic_s, family = binomial(link = "logit"))
+
+pred <- predict(generic_m2, newdata = pred_pops, type= "response")
+
+pred_pops$pred_val = pred_pops$N * pred
+
+df <- list(Demographic_Type = 'National', Demographic = 'National',
+           Vote_R = sum(pred_pops$pred_val)/sum(pred_pops$N)) %>% as.tibble()
+for(i in 1:length(demographic_combinations)){
+  vars = demographic_combinations[[i]]
+  temp = pred_pops %>% group_by_(.dots = lapply(vars, as.symbol)) %>%
+    summarise(Vote_R = sum(pred_val) / sum(N)) %>%
+    unite_(col='Demographic', vars, sep=' ') %>%
+    mutate(Demographic_Type = str_to_title(str_flatten(vars, collapse=' ')))
+  
+  df <- bind_rows(df, temp)
+}
+
+write_csv(df, '~/Desktop/capstone/generic_mrp_results_district_slopes.csv')
+```
+
+
+# SPECIFIC
+
+```{r}
+library(optimx)
+
+specific_s <- read_csv('~/Desktop/capstone/all_specific.csv',
+                     col_types=cols(party = col_factor(levels=levels(specific_s$party)),
+                                    gender = col_factor(levels=levels(specific_s$gender)),
+                                    age = col_factor(levels=levels(specific_s$age)),
+                                    race = col_factor(levels=levels(specific_s$race)),
+                                    education = col_factor(levels=levels(specific_s$education)),
+                                    urbanicity = col_factor(levels=levels(specific_s$urbanicity)),
+                                    married = col_factor(levels=levels(specific_s$married)),
+                                    vote2018 = col_character(),
+                                    district = col_factor(levels = levels(specific_s$district)),
+                                    wave = col_skip())) %>%
+  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
+                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
+  filter(!is.na(vote2018)) %>%
+  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
+
+
+pops <- read_csv('~/Desktop/capstone/population_data.csv',
+                 col_types=cols(age = col_factor(levels=levels(specific_s$age)),
+                                urbanicity = col_factor(levels=levels(specific_s$urbanicity)),
+                                gender = col_factor(levels=levels(specific_s$gender)),
+                                race = col_factor(levels=levels(specific_s$race)),
+                                education = col_factor(levels=levels(specific_s$education)),
+                                married = col_factor(levels=levels(specific_s$married)),
+                                party = col_factor(levels=levels(specific_s$party)),
+                                district = col_factor(levels=levels(specific_s$district)),
+                                N = col_double()))
+
+
+colnames(pops) <- c("age","urbanicity","gender","state","race","education","married","party","district", "N")
+library("stringr")                                             
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = '00', 
+    replacement = 'zz'
+)
+pops$district <- str_replace(
+  pops$district,
+  pattern = '0', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = 'zz', 
+    replacement = '0'
+)
+
+
+pops$state <- paste(pops$state,"-")
+pops$district <- paste(pops$state,pops$district)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+
+pops$district <- as.factor(pops$district)
+
+pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+
+pred_pops <- pred_pops[(pred_pops$district %in% specific_s$district),]
+
+
+specific_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+
+pred <- predict(specific_m, newdata = pred_pops, type= "response")
+
+pred_pops$pred_val = pred_pops$N * pred
+
+df <- list(Demographic_Type = 'National', Demographic = 'National',
+           Vote_R = sum(pred_pops$pred_val)/sum(pred_pops$N)) %>% as.tibble()
+for(i in 1:length(demographic_combinations)){
+  vars = demographic_combinations[[i]]
+  temp = pred_pops %>% group_by_(.dots = lapply(vars, as.symbol)) %>%
+    summarise(Vote_R = sum(pred_val) / sum(N)) %>%
+    unite_(col='Demographic', vars, sep=' ') %>%
+    mutate(Demographic_Type = str_to_title(str_flatten(vars, collapse=' ')))
+  
+  df <- bind_rows(df, temp)
+}
+
+write_csv(df, '~/Desktop/capstone/specific_mrp_results_district.csv')
+```
+
+
+# VARYING SLOPES SPECIFIC
+"Parameters or bounds appear to have different scalings.
+  This can cause poor performance in optimization. 
+  It is important for derivative free methods like BOBYQA, UOBYQA, NEWUOA."
+```{r}
+library(optimx)
+
+specific_s <- read_csv('~/Desktop/capstone/all_specific.csv',
+                     col_types=cols(party = col_factor(levels=levels(specific_s$party)),
+                                    gender = col_factor(levels=levels(specific_s$gender)),
+                                    age = col_factor(levels=levels(specific_s$age)),
+                                    race = col_factor(levels=levels(specific_s$race)),
+                                    education = col_factor(levels=levels(specific_s$education)),
+                                    urbanicity = col_factor(levels=levels(specific_s$urbanicity)),
+                                    married = col_factor(levels=levels(specific_s$married)),
+                                    vote2018 = col_character(),
+                                    district = col_factor(levels = levels(specific_s$district)),
+                                    wave = col_skip())) %>%
+  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
+                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
+  filter(!is.na(vote2018)) %>%
+  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
+
+
+pops <- read_csv('~/Desktop/capstone/population_data.csv',
+                 col_types=cols(age = col_factor(levels=levels(specific_s$age)),
+                                urbanicity = col_factor(levels=levels(specific_s$urbanicity)),
+                                gender = col_factor(levels=levels(specific_s$gender)),
+                                race = col_factor(levels=levels(specific_s$race)),
+                                education = col_factor(levels=levels(specific_s$education)),
+                                married = col_factor(levels=levels(specific_s$married)),
+                                party = col_factor(levels=levels(specific_s$party)),
+                                district = col_factor(levels=levels(specific_s$district)),
+                                N = col_double()))
+
+
+colnames(pops) <- c("age","urbanicity","gender","state","race","education","married","party","district", "N")
+library("stringr")                                             
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = '00', 
+    replacement = 'zz'
+)
+pops$district <- str_replace(
+  pops$district,
+  pattern = '0', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+  pops$district,
+  pattern = 'zz', 
+    replacement = '0'
+)
+
+
+pops$state <- paste(pops$state,"-")
+pops$district <- paste(pops$state,pops$district)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+pops$district <- str_replace(
+    pops$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+
+pops$district <- as.factor(pops$district)
+
+pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+
+pred_pops <- pred_pops[(pred_pops$district %in% specific_s$district),]
+
+
+specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district), data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+
+pred <- predict(specific_m2, newdata = pred_pops, type= "response")
+
+pred_pops$pred_val = pred_pops$N * pred
+
+df <- list(Demographic_Type = 'National', Demographic = 'National',
+           Vote_R = sum(pred_pops$pred_val)/sum(pred_pops$N)) %>% as.tibble()
+for(i in 1:length(demographic_combinations)){
+  vars = demographic_combinations[[i]]
+  temp = pred_pops %>% group_by_(.dots = lapply(vars, as.symbol)) %>%
+    summarise(Vote_R = sum(pred_val) / sum(N)) %>%
+    unite_(col='Demographic', vars, sep=' ') %>%
+    mutate(Demographic_Type = str_to_title(str_flatten(vars, collapse=' ')))
+  
+  df <- bind_rows(df, temp)
+}
+
+write_csv(df, '~/Desktop/capstone/specific_mrp_results_district_slopes.csv')
+```
+
+
+
+
+
+
+
+
+# IF WE EVER WANT THE NESTED MODELS:
+
+
+```{r}
+
+
+pops2 <- read_csv('~/Desktop/capstone/population_data.csv',
+                 col_types=cols(age = col_factor(levels=levels(specific_s$age)),
+                                urbanicity = col_factor(levels=levels(specific_s$urbanicity)),
+                                gender = col_factor(levels=levels(specific_s$gender)),
+                                race = col_factor(levels=levels(specific_s$race)),
+                                education = col_factor(levels=levels(specific_s$education)),
+                                married = col_factor(levels=levels(specific_s$married)),
+                                party = col_factor(levels=levels(specific_s$party)),
+                                district = col_factor(levels=levels(specific_s$district)),
+			       state = col_factor(levels=levels(specific_s$state)),
+                                N = col_double()))
+
+
+colnames(pops2) <- c("age","urbanicity","gender","state","race","education","married","party","district", "N")
+library("stringr")                                             
+
+library("stringr")                                             
+pops2$district <- str_replace(
+  pops2$district,
+  pattern = '00', 
+    replacement = 'zz'
+)
+pops2$district <- str_replace(
+  pops2$district,
+  pattern = '0', 
+    replacement = ''
+)
+
+pops2$district <- str_replace(
+  pops2$district,
+  pattern = 'zz', 
+    replacement = '0'
+)
+
+
+pops2$state2 <- paste(pops2$state,"-")
+pops2$district <- paste(pops2$state2,pops2$district)
+
+
+
+pops2$district <- str_replace(
+    pops2$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+pops2$district <- str_replace(
+    pops2$district,
+    pattern = ' ', 
+    replacement = ''
+)
+
+
+
+pops2$district <- as.factor(pops2$district)
+pops2$state <- as.factor(pops2$state)
+
+pred_pops2 <- pops2 %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+
+
+
+specific_s <- separate(data = specific_s, col = district, into = c("state", "district"), sep = "\\-")
+specific_s$district <- paste(specific_s$state,specific_s$district)
+
+specific_s$district <- str_replace(
+  specific_s$district,
+  pattern = ' ', 
+    replacement = '-'
+)
+
+
+specific_s$district <- str_replace(
+  specific_s$district,
+  pattern = ' NA', 
+    replacement = ''
+)
+
+specific_s$state <- as.factor(specific_s$state)
+specific_s$district <- as.factor(specific_s$district)
+
+pred_pops2 <- pred_pops2[(pred_pops2$district %in% specific_s$district),]
+
+
+pred_pops2 <- pred_pops2[(pred_pops2$state %in% specific_s$state),]
+
+
+specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = specific_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
+pred2 <- predict(specific_m2, newdata = pred_pops2, type= "response")
+
+
+pred_pops2$pred_val = pred_pops2$N * pred2
+
+df2 <- list(Demographic_Type = 'National', Demographic = 'National',
+           Vote_R = sum(pred_pops2$pred_val)/sum(pred_pops2$N)) %>% as.tibble()
+for(i in 1:length(demographic_combinations)){
+  vars = demographic_combinations[[i]]
+  temp = pred_pops2 %>% group_by_(.dots = lapply(vars, as.symbol)) %>%
+    summarise(Vote_R = sum(pred_val) / sum(N)) %>%
+    unite_(col='Demographic', vars, sep=' ') %>%
+    mutate(Demographic_Type = str_to_title(str_flatten(vars, collapse=' ')))
+  
+  df2 <- bind_rows(df2, temp)
+}
+
+write_csv(df2, '~/Desktop/capstone/specific_mrp_results_nested2.csv')
+```
+
+
