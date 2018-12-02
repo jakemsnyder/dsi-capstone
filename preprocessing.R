@@ -84,9 +84,6 @@ population <- pops %>%
   summarise(N = sum(N)) %>%
   rename(district = congressional_district) %>%
   ungroup() %>%
-  mutate(district = str_sub(district, 2),
-         party = case_when(party == 'Dem' ~ 'Democrat',
-                           party == 'Rep' ~ 'Republican',
-                           party == 'Ind' ~ 'Independent')) %>%
+  mutate(district = str_sub(district, 2)) %>%
   unite(district, state, district, sep = '-', remove=FALSE)
 write_csv(population, 'Data/population_data.csv')
