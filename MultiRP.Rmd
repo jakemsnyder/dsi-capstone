@@ -101,7 +101,7 @@ for(i in 1:length(demographic_combinations)){
   df <- bind_rows(df, temp)
 }
 
-write_csv(df, 'Output/generic_mrp_results_district.csv')
+write_csv(df, 'Output/generic_mrp_glmer_results.csv')
 ```
 
 
@@ -133,7 +133,7 @@ for(i in 1:length(demographic_combinations)){
   df <- bind_rows(df, temp)
 }
 
-write_csv(df, 'Output/generic_mrp_results_district_slopes.csv')
+write_csv(df, 'Output/generic_mrp_glmer_results_slopes.csv')
 ```
 
 
@@ -162,7 +162,7 @@ for(i in 1:length(demographic_combinations)){
   df <- bind_rows(df, temp)
 }
 
-write_csv(df, 'Output/specific_mrp_results_district.csv')
+write_csv(df, 'Output/specific_mrp_glmer_results.csv')
 ```
 
 
@@ -193,7 +193,7 @@ for(i in 1:length(demographic_combinations)){
   df <- bind_rows(df, temp)
 }
 
-write_csv(df, 'Output/specific_mrp_results_district_slopes.csv')
+write_csv(df, 'Output/specific_mrp_glmer_results_slopes.csv')
 ```
 
 
@@ -252,5 +252,5 @@ for(i in 1:length(demographic_combinations)){
   df2 <- bind_rows(df2, temp)
 }
 
-write_csv(df2, 'Data/specific_mrp_results_nested2.csv')
+write_csv(df2, 'Data/specific_mrp_glmer_results_nested2.csv')
 ```

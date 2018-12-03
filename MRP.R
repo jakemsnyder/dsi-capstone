@@ -77,7 +77,7 @@ for(i in 1:length(demographic_combinations)){
   df <- bind_rows(df, temp)
 }
 
-write_csv(df, 'Output/generic_mrp_results.csv')
+write_csv(df, 'Output/generic_mrp_multinom_results.csv')
 
 # specific mrp
 specific_m <- multinom(vote2018 ~ district + (party + age + urbanicity + gender + race + education + married)^2,
@@ -98,4 +98,4 @@ for(i in 1:length(demographic_combinations)){
   df <- bind_rows(df, temp)
 }
 
-write_csv(df, 'Output/specific_mrp_results.csv')
+write_csv(df, 'Output/specific_mrp_multinom_results.csv')
