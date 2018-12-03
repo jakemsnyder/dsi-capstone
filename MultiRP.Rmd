@@ -14,8 +14,7 @@ library(lme4)
 library(optimx)
 ```
 
-## ANEW
-```{r generic}
+```{r data}
 set.seed(42)
 
 demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
@@ -58,8 +57,28 @@ generic_s <- read_csv('Data/all_generic_with_districts.csv',
   mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican'))) %>%
   sample_n(6209)
 
-pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+specific_s <- read_csv('Data/all_specific.csv',
+                     col_types=cols(party = col_factor(levels=levels(pops$party)),
+                                    gender = col_factor(levels=levels(pops$gender)),
+                                    age = col_factor(levels=levels(pops$age)),
+                                    race = col_factor(levels=levels(pops$race)),
+                                    education = col_factor(levels=levels(pops$education)),
+                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
+                                    married = col_factor(levels=levels(pops$married)),
+                                    vote2018 = col_character(),
+                                    district = col_factor(levels = levels(pops$district)),
+                                    wave = col_skip())) %>%
+  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
+                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
+  filter(!is.na(vote2018)) %>%
+  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
 
+pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+```
+
+
+## ANEW
+```{r generic}
 #generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district), data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
 
 generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
@@ -91,49 +110,7 @@ write_csv(df, 'Output/generic_mrp_results_district.csv')
   This can cause poor performance in optimization. 
   It is important for derivative free methods like BOBYQA, UOBYQA, NEWUOA.unable to evaluate scaled gradientModel failed to converge: degenerate  Hessian with 1 negative eigenvalues"
 ```{r generic_var_slopes}
-set.seed(42)
-
-demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
-demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
-                              combn(demographics, simplify=FALSE, 2),
-                              combn(demographics, simplify=FALSE, 3),
-                              combn(demographics, simplify=FALSE, 4),
-                              combn(demographics, simplify=FALSE, 5),
-                              combn(demographics, simplify=FALSE, 6),
-                              combn(demographics, simplify=FALSE, 7),
-                              'district')
-
-pops <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
-                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
-                                gender = col_factor(levels=c('Male', 'Female')),
-                                district = col_factor(NULL),
-                                state = col_skip(),
-                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
-                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
-                                married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
-                                N = col_double()))
-
-generic_s <- read_csv('Data/all_generic_with_districts.csv',
-                    col_types=cols(party = col_factor(levels=levels(pops$party)),
-                                   gender = col_factor(levels=levels(pops$gender)),
-                                   age = col_factor(levels=levels(pops$age)),
-                                   race = col_factor(levels=levels(pops$race)),
-                                   education = col_factor(levels=levels(pops$education)),
-                                   urbanicity = col_factor(levels=levels(pops$urbanicity)),
-                                   vote2018 = col_character(),
-                                   married = col_factor(levels=levels(pops$married)),
-                                   district = col_factor(levels=levels(pops$district)),
-                                   state = col_skip(),
-                                   wave = col_skip())) %>%
-  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
-                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
-  filter(!is.na(vote2018)) %>%
-  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican'))) %>%
-  sample_n(6209)
-
-pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+pred_pops <- select(pred_pops, -pred_val)
 
 generic_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender | district),
                     data = generic_s, family = binomial(link = "logit"), control = glmerControl(optimizer ='optimx', optCtrl=list(method='nlminb')))
@@ -163,37 +140,7 @@ write_csv(df, 'Output/generic_mrp_results_district_slopes.csv')
 # SPECIFIC
 
 ```{r specific}
-pops <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
-                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
-                                gender = col_factor(levels=c('Male', 'Female')),
-                                district = col_factor(NULL),
-                                state = col_skip(),
-                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
-                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
-                                married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
-                                N = col_double()))
-
-specific_s <- read_csv('Data/all_specific.csv',
-                     col_types=cols(party = col_factor(levels=levels(pops$party)),
-                                    gender = col_factor(levels=levels(pops$gender)),
-                                    age = col_factor(levels=levels(pops$age)),
-                                    race = col_factor(levels=levels(pops$race)),
-                                    education = col_factor(levels=levels(pops$education)),
-                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
-                                    married = col_factor(levels=levels(pops$married)),
-                                    vote2018 = col_character(),
-                                    district = col_factor(levels = levels(pops$district)),
-                                    wave = col_skip())) %>%
-  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
-                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
-  filter(!is.na(vote2018)) %>%
-  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
-
-
-pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
-
+pred_pops <- select(pred_pops, -pred_val)
 
 specific_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district),
                     data = specific_s, family = binomial(link = "logit"),
@@ -224,36 +171,7 @@ write_csv(df, 'Output/specific_mrp_results_district.csv')
   This can cause poor performance in optimization. 
   It is important for derivative free methods like BOBYQA, UOBYQA, NEWUOA."
 ```{r specific_var_slopes}
-pops <- read_csv('Data/population_data.csv',
-                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
-                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
-                                gender = col_factor(levels=c('Male', 'Female')),
-                                district = col_factor(NULL),
-                                state = col_skip(),
-                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
-                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
-                                married = col_factor(levels=c('Unmarried', 'Married')),
-                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
-                                N = col_double()))
-
-specific_s <- read_csv('Data/all_specific.csv',
-                     col_types=cols(party = col_factor(levels=levels(pops$party)),
-                                    gender = col_factor(levels=levels(pops$gender)),
-                                    age = col_factor(levels=levels(pops$age)),
-                                    race = col_factor(levels=levels(pops$race)),
-                                    education = col_factor(levels=levels(pops$education)),
-                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
-                                    married = col_factor(levels=levels(pops$married)),
-                                    vote2018 = col_character(),
-                                    district = col_factor(levels = levels(pops$district)),
-                                    wave = col_skip())) %>%
-  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
-                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
-  filter(!is.na(vote2018)) %>%
-  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
-
-pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
-
+pred_pops <- select(pred_pops, -pred_val)
 
 specific_m2 <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district),
                      data = specific_s, family = binomial(link = "logit"),
@@ -277,12 +195,6 @@ for(i in 1:length(demographic_combinations)){
 
 write_csv(df, 'Output/specific_mrp_results_district_slopes.csv')
 ```
-
-
-
-
-
-
 
 
 ## IF WE EVER WANT THE NESTED MODELS:
