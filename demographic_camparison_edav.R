@@ -127,7 +127,7 @@ plot_demographics[plot_demographics == 'No college'] <- "No Bachelors"
 
 ggplot(data=plot_demographics, aes(x=as.factor(paste(Cat, Label, sep='\n')),
                                    y=Prop, group=as.factor(Type), linetype=as.factor(Type))) +
-  geom_point(stat="identity",colour='black') +
+  geom_point(stat="identity") +
   geom_line() +
   facet_wrap(~Var, scales="free", nrow=1, ncol=6) +
   theme_bw() +
