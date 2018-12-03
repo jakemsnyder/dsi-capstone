@@ -56,3 +56,18 @@ specific_glmer_slope <- read_csv('Output/specific_mrp_glmer_results_slopes.csv')
          Vote_R)
 plot_model_eval(specific_glmer_slope, results)
 
+generic_multinom <- read_csv('Output/generic_mrp_multinom_results.csv',
+                              col_types=cols(Vote_R = col_double())) %>%
+  filter(Demographic_Type == 'District') %>%
+  select(district=Demographic,
+         Vote_R)
+plot_model_eval(generic_multinom, results)
+
+specific_multinom <- read_csv('Output/specific_mrp_multinom_results.csv',
+                              col_types=cols(Vote_R = col_double())) %>%
+  filter(Demographic_Type == 'District') %>%
+  select(district=Demographic,
+         Vote_R) %>%
+  filter(!is.na(district))
+plot_model_eval(specific_multinom, results)
+
