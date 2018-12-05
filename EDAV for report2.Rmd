@@ -2,7 +2,6 @@
 title: "EDAV Capstone Progress 2"
 output: html_document
 ---
-I'd recommend showing how the values in our dataset compare to the population data. The fact that our dataset is 80% white isn't interesting if the population is also 80% white (it's not, which is why it's interesting). Or perhaps show the difference in percent (i.e. white is +12%, black is -8%, hispanic -12%... these are made up numbers but you get what I mean)
 
 ```{r setup, include=FALSE}
 library(tidyr)  
@@ -351,5 +350,140 @@ We'll now translate some of the old Python code to visualize proportions of voti
 
 ```{r}
 #Insert translated Geomap here.
+library(plotly)
+library(RColorBrewer)
+
+## Create version of genericdf and specificdf that have the following columns
+## state, total number of responses, prop_rep, prop_dem, prop_other
+
+#BASELINE df 
+generic_map_df <- genericdf %>%
+    select(state, vote2018)%>%
+  group_by(state)%>%
+    mutate(total_num_responses = n())%>%
+    filter(vote2018 == 'Republican candidate')%>%
+    mutate(num_rep = n())%>%
+    select(state, total_num_responses, num_rep) %>%
+    distinct(state, total_num_responses, num_rep) %>%
+    arrange(state)
+
+dem <- genericdf %>%
+    group_by(state)%>%
+    filter(vote2018=='Democratic candidate') %>%
+    mutate(num_dem = n())%>%
+    select(state, num_dem) %>%
+    distinct(state, num_dem) %>% 
+    arrange(state)
+
+other <- genericdf %>%
+    group_by(state) %>%
+    filter(vote2018=='Other candidate/not sure') %>%
+    mutate(num_other = n())%>%
+    select(state, num_other) %>%
+    distinct(state, num_other)%>%
+    arrange(state)
+
+generic_map_df <- cbind(generic_map_df, dem, other)%>%
+    select(state, total_num_responses, num_rep, num_dem, num_other) %>%
+    group_by(state) %>%
+    mutate(prop_rep = num_rep / total_num_responses) %>% 
+    mutate(prop_dem = num_dem / total_num_responses) %>% 
+    mutate(prop_other = num_other / total_num_responses)
+
+#BASELINE specificdf 
+# Note that the total number of states gathered in 40 districts surveys = 18 states
+specific_map_df <- specificdf %>%
+    select(state, vote2018)%>%
+  group_by(state)%>%
+    mutate(total_num_responses = n())%>%
+    filter(vote2018 == 'Republican candidate')%>%
+    mutate(num_rep = n())%>%
+    select(state, total_num_responses, num_rep) %>%
+    distinct(state, total_num_responses, num_rep) %>%
+    arrange(state)
+
+dem <- specificdf %>%
+    group_by(state)%>%
+    filter(vote2018=='Democratic candidate') %>%
+    mutate(num_dem = n())%>%
+    select(state, num_dem) %>%
+    distinct(state, num_dem) %>% 
+    arrange(state)
+
+other <- specific %>%
+    group_by(state) %>%
+    filter(vote2018=='Other candidate/not sure') %>%
+    mutate(num_other = n())%>%
+    select(state, num_other) %>%
+    distinct(state, num_other)%>%
+    arrange(state)
+
+specific_map_df <- cbind(specific_map_df, dem, other)%>%
+    select(state, total_num_responses, num_rep, num_dem, num_other) %>%
+    group_by(state) %>%
+    mutate(prop_rep = num_rep / total_num_responses) %>% 
+    mutate(prop_dem = num_dem / total_num_responses) %>% 
+    mutate(prop_other = num_other / total_num_responses)
+
+########### Design Choropleth map ###################
+
+generic_map_df$hover <- with(generic_map_df, paste(state,'<br>',
+                                         'Number of Responses',total_num_responses,'<br>',
+                                         'Proportion likely to vote Republican',prop_rep, '<br>',
+                                         'Proportion likely to vote Democrat', prop_dem,  '<br>',
+                                         'Proportion likely to vote Other/Not sure',prop_other,'<br>'))
+
+# give state boundaries a white border
+l <- list(color = toRGB("white"), width = 2)
+# specify some map projection/options
+geo <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+colors = rev(brewer.pal(4, "RdYlBu"))
+p <- plot_geo(generic_map_df, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~prop_rep, text = ~hover, locations = ~state,
+    color = ~prop_rep, colors = colors  ) %>%
+  colorbar(title = "% of Respondents likely to vote Republican", limits=c(0,1)) %>%
+  layout(
+    title = '% of Generic Survey Respondents likely to vote Republican',
+    geo = geo
+  )
+
+
+###################### Design choropleth for specific #################
+########### Design Choropleth map ###################
+
+specific_map_df$hover <- with(specific_map_df, paste(state,'<br>',
+                                         'Number of Responses',total_num_responses,'<br>',
+                                         'Proportion likely to vote Republican',prop_rep, '<br>',
+                                         'Proportion likely to vote Democrat', prop_dem,  '<br>',
+                                         'Proportion likely to vote Other/Not sure',prop_other,'<br>'))
+
+# give state boundaries a white border
+l <- list(color = toRGB("white"), width = 2)
+# specify some map projection/options
+geo <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+colors = rev(brewer.pal(4, "RdYlBu"))
+p2 <- plot_geo(specific_map_df, locationmode = 'USA-states') %>%
+  add_trace(
+    z = ~prop_rep, text = ~hover, locations = ~state,
+    color = ~prop_rep, colors = colors  ) %>%
+  colorbar(title = "% of Respondents likely to vote Republican", limits=c(0,1)) %>%
+  layout(
+    title = '% of Specific Survey Respondents likely to vote Republican',
+    geo = geo
+  )
+p2
 ```
 
