@@ -357,6 +357,11 @@ library(RColorBrewer)
 ## state, total number of responses, prop_rep, prop_dem, prop_other
 
 #BASELINE df 
+genericdf <- genericdf %>%
+    filter(vote2018!='Other candidate/not sure')
+specificdf <- specificdf %>%
+    filter(vote2018!='Other candidate/not sure')
+
 generic_map_df <- genericdf %>%
     select(state, vote2018)%>%
   group_by(state)%>%
@@ -375,20 +380,19 @@ dem <- genericdf %>%
     distinct(state, num_dem) %>% 
     arrange(state)
 
-other <- genericdf %>%
-    group_by(state) %>%
-    filter(vote2018=='Other candidate/not sure') %>%
-    mutate(num_other = n())%>%
-    select(state, num_other) %>%
-    distinct(state, num_other)%>%
-    arrange(state)
+# other <- genericdf %>%
+#     group_by(state) %>%
+#     filter(vote2018=='Other candidate/not sure') %>%
+#     mutate(num_other = n())%>%
+#     select(state, num_other) %>%
+#     distinct(state, num_other)%>%
+#     arrange(state)
 
-generic_map_df <- cbind(generic_map_df, dem, other)%>%
-    select(state, total_num_responses, num_rep, num_dem, num_other) %>%
+generic_map_df <- cbind(generic_map_df, dem)%>%
+    select(state, total_num_responses, num_rep, num_dem) %>%
     group_by(state) %>%
     mutate(prop_rep = num_rep / total_num_responses) %>% 
-    mutate(prop_dem = num_dem / total_num_responses) %>% 
-    mutate(prop_other = num_other / total_num_responses)
+    mutate(prop_dem = num_dem / total_num_responses) 
 
 #BASELINE specificdf 
 # Note that the total number of states gathered in 40 districts surveys = 18 states
@@ -410,28 +414,27 @@ dem <- specificdf %>%
     distinct(state, num_dem) %>% 
     arrange(state)
 
-other <- specific %>%
-    group_by(state) %>%
-    filter(vote2018=='Other candidate/not sure') %>%
-    mutate(num_other = n())%>%
-    select(state, num_other) %>%
-    distinct(state, num_other)%>%
-    arrange(state)
+# other <- specific %>%
+#     group_by(state) %>%
+#     filter(vote2018=='Other candidate/not sure') %>%
+#     mutate(num_other = n())%>%
+#     select(state, num_other) %>%
+#     distinct(state, num_other)%>%
+#     arrange(state)
 
-specific_map_df <- cbind(specific_map_df, dem, other)%>%
-    select(state, total_num_responses, num_rep, num_dem, num_other) %>%
+specific_map_df <- cbind(specific_map_df, dem)%>%
+    select(state, total_num_responses, num_rep, num_dem) %>%
     group_by(state) %>%
     mutate(prop_rep = num_rep / total_num_responses) %>% 
-    mutate(prop_dem = num_dem / total_num_responses) %>% 
-    mutate(prop_other = num_other / total_num_responses)
+    mutate(prop_dem = num_dem / total_num_responses)
 
 ########### Design Choropleth map ###################
 
 generic_map_df$hover <- with(generic_map_df, paste(state,'<br>',
                                          'Number of Responses',total_num_responses,'<br>',
                                          'Proportion likely to vote Republican',prop_rep, '<br>',
-                                         'Proportion likely to vote Democrat', prop_dem,  '<br>',
-                                         'Proportion likely to vote Other/Not sure',prop_other,'<br>'))
+                                         'Proportion likely to vote Democrat', prop_dem,  '<br>'))
+                                         # 'Proportion likely to vote Other/Not sure',prop_other,'<br>'))
 
 # give state boundaries a white border
 l <- list(color = toRGB("white"), width = 2)
@@ -461,8 +464,8 @@ p <- plot_geo(generic_map_df, locationmode = 'USA-states') %>%
 specific_map_df$hover <- with(specific_map_df, paste(state,'<br>',
                                          'Number of Responses',total_num_responses,'<br>',
                                          'Proportion likely to vote Republican',prop_rep, '<br>',
-                                         'Proportion likely to vote Democrat', prop_dem,  '<br>',
-                                         'Proportion likely to vote Other/Not sure',prop_other,'<br>'))
+                                         'Proportion likely to vote Democrat', prop_dem,  '<br>'))
+                                         # 'Proportion likely to vote Other/Not sure',prop_other,'<br>'))
 
 # give state boundaries a white border
 l <- list(color = toRGB("white"), width = 2)
