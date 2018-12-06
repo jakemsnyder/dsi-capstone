@@ -160,15 +160,23 @@ plot_demographics[plot_demographics == 'No college'] <- "No Bachelors"
 plot_demographics <- within(plot_demographics, Cat[Label == 'Bachelors'] <- '1')
 plot_demographics <- within(plot_demographics, Cat[Label == 'No Bachelors'] <- '2')
 
-ggplot(data=plot_demographics, aes(x=as.factor(paste(Cat, Label, sep='\n')),
-                                   y=Prop,colour = as.factor(Type), group=as.factor(Type), linetype=as.factor(Type))) +
-  geom_point(stat="identity",colour='black') +
-  geom_line(size=0.8) +
-  facet_wrap(~Var, scales="free", nrow=1, ncol=6) +
+ggplot(data=plot_demographics, aes(x=as.factor(Label),
+    # x=as.factor(paste(Cat, Label, sep='\n')), 
+                                   y=Prop,
+                                   fill = as.factor(Type),
+                                   group=as.factor(Type)))+
+                                   # linetype=as.factor(Type))) +
+  # geom_point(stat="identity",colour='black') +
+    facet_wrap(~Var, scales="free", nrow=1, ncol=6)+
+    geom_bar(position='dodge', stat = 'identity')+
+    # geom_bar(position = 'dodge', aes(y = Prop, fill= as.factor(Type)))+
+  # geom_line(size=0.8) +
+  # facet_wrap(~Var, scales="free", nrow=1, ncol=6) +
   theme_bw() +
-  scale_fill_manual(values=c('#1f78b4','#33a02c', '#e31a1c', '#ff7f00', '#8856a7'),guide=FALSE) +
-    scale_color_manual(name = 'Guide1', values=c('#FF8B8B','#000000','#008000')) +
-    scale_linetype_manual(name = 'Guide1', values = rep(1:3,3))+
+  # scale_fill_manual(values=c('#1f78b4','#33a02c', '#e31a1c', '#ff7f00', '#8856a7'),guide=FALSE) +
+    scale_fill_manual(name = 'Guide1', values=c('#b7b7ff','#A8A8A8','#1fb6b6'))+
+    # scale_color_manual(name = 'Guide1', values=c('#19AAD1','#F1D3D3','#008000')) +
+    # scale_linetype_manual(name = 'Guide1', values = rep(1:3,3))+
   scale_y_continuous(breaks=c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1),
                      labels=c('0%','10%', '20%','30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%')) +
   scale_alpha_manual(values=c(1, .3)) +
@@ -177,12 +185,12 @@ ggplot(data=plot_demographics, aes(x=as.factor(paste(Cat, Label, sep='\n')),
   theme(legend.position="bottom",
         axis.title.y=element_blank(),
         axis.title.x=element_blank(),
-        axis.text.x=element_text(size=10, angle=20, hjust=1),
+        axis.text.x=element_text(size=10, angle=45, hjust=1),
         strip.text=element_text(size=10),
-        strip.background = element_rect(fill='grey92'),
+        strip.background = element_rect(fill='lightgrey'),
         panel.grid = element_line( size=0.2))
 
-ggsave("plots/demographic_comparison.jpg", width=16, height=8)
+ggsave("plots/demographic_comparison_bar.jpg", width=16, height=8)
 
 ```
 
@@ -453,7 +461,7 @@ p <- plot_geo(generic_map_df, locationmode = 'USA-states') %>%
     color = ~prop_rep, colors = colors  ) %>%
   colorbar(title = "% of Respondents likely to vote Republican", limits=c(0,1)) %>%
   layout(
-    title = '% of Generic Survey Respondents likely to vote Republican',
+    title = 'Which party would you vote for? (Generic Poll)',
     geo = geo
   )
 
@@ -484,7 +492,7 @@ p2 <- plot_geo(specific_map_df, locationmode = 'USA-states') %>%
     color = ~prop_rep, colors = colors  ) %>%
   colorbar(title = "% of Respondents likely to vote Republican", limits=c(0,1)) %>%
   layout(
-    title = '% of Specific Survey Respondents likely to vote Republican',
+    title = 'Whom (candidate names mentioned) who would you vote for? (Specific Poll)',
     geo = geo
   )
 p2
