@@ -155,10 +155,10 @@ plot_demographics <- within(plot_demographics, Cat[Label == 'Other'] <- '4')
 plot_demographics <- within(plot_demographics, Cat[Label == 'Male'] <- '2')
 plot_demographics <- within(plot_demographics, Cat[Label == 'Married'] <- '1')
 plot_demographics <- within(plot_demographics, Cat[Label == 'Unmarried'] <- '2')
-plot_demographics <- within(plot_demographics, Cat[Label == 'Bachelor'] <- '1')
-plot_demographics <- within(plot_demographics, Cat[Label == 'No Bachelor'] <- '2')
 plot_demographics[plot_demographics == 'College'] <- "Bachelors"
 plot_demographics[plot_demographics == 'No college'] <- "No Bachelors"
+plot_demographics <- within(plot_demographics, Cat[Label == 'Bachelors'] <- '1')
+plot_demographics <- within(plot_demographics, Cat[Label == 'No Bachelors'] <- '2')
 
 ggplot(data=plot_demographics, aes(x=as.factor(paste(Cat, Label, sep='\n')),
                                    y=Prop,colour = as.factor(Type), group=as.factor(Type), linetype=as.factor(Type))) +
