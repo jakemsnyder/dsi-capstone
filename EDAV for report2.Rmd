@@ -163,19 +163,19 @@ plot_demographics <- within(plot_demographics, Cat[Label == 'No Bachelors'] <- '
 ggplot(data=plot_demographics, aes(x=as.factor(Label),
     # x=as.factor(paste(Cat, Label, sep='\n')), 
                                    y=Prop,
-                                   fill = as.factor(Type),
+                                   colour = as.factor(Type),
                                    group=as.factor(Type)))+
                                    # linetype=as.factor(Type))) +
-  # geom_point(stat="identity",colour='black') +
     facet_wrap(~Var, scales="free", nrow=1, ncol=6)+
-    geom_bar(position='dodge', stat = 'identity')+
+   geom_point(position = position_dodge(width = 0.15), stat="identity", size = 3) +
+    # geom_bar(position='dodge', stat = 'identity')+
     # geom_bar(position = 'dodge', aes(y = Prop, fill= as.factor(Type)))+
   # geom_line(size=0.8) +
   # facet_wrap(~Var, scales="free", nrow=1, ncol=6) +
   theme_bw() +
   # scale_fill_manual(values=c('#1f78b4','#33a02c', '#e31a1c', '#ff7f00', '#8856a7'),guide=FALSE) +
-    scale_fill_manual(name = 'Guide1', values=c('#b7b7ff','#A8A8A8','#1fb6b6'))+
-    # scale_color_manual(name = 'Guide1', values=c('#19AAD1','#F1D3D3','#008000')) +
+    # scale_fill_manual(name = 'Guide1', values=c('#b7b7ff','#A8A8A8','#1fb6b6'))+
+    scale_color_manual(name = 'Legend', values=c('#6495ed','#000000','#1fb6b6'))+
     # scale_linetype_manual(name = 'Guide1', values = rep(1:3,3))+
   scale_y_continuous(breaks=c(0, .1, .2, .3, .4, .5, .6, .7, .8, .9, 1),
                      labels=c('0%','10%', '20%','30%', '40%', '50%', '60%', '70%', '80%', '90%', '100%')) +
@@ -190,7 +190,7 @@ ggplot(data=plot_demographics, aes(x=as.factor(Label),
         strip.background = element_rect(fill='lightgrey'),
         panel.grid = element_line( size=0.2))
 
-ggsave("plots/demographic_comparison_bar.jpg", width=16, height=8)
+ggsave("plots/demographic_comparison_dots.jpg", width=16, height=8)
 
 ```
 
