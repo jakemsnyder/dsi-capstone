@@ -1,0 +1,324 @@
+---
+title: "Intervals MRP"
+author: "Tin Oreskovic"
+date: "12/4/2018"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(nnet)
+library(rstanarm)
+library(lme4)
+library(optimx)
+```
+
+## preprocessing
+```{r}
+generic_colnames <- c("party", "gender", "age",
+                      "race", "education", "urbanicity",
+                      "vote2018", "married", "CD_116", "state", "wave")
+
+
+load("~/Desktop/capstone/generic_ballot.RData")
+generic <- voting2018
+names(generic) <- tolower(names(generic))
+
+# To allow different Pollfish names
+loadRData <- function(fileName){
+  #loads an RData file, and returns it
+  load(fileName)
+  get(ls()[ls() != "fileName"])
+}
+
+survey1 <- loadRData("~/Desktop/capstone/Pollfish_Survey_FI10002d.378826.moreifo_completed2.RData")
+survey2 <- loadRData("~/Desktop/capstone/Pollfish_Survey_FI10006b.378910.moreifo_completed2.RData")
+survey3 <- loadRData("~/Desktop/capstone/Pollfish_Survey_IN10001a.406052.moreifo_completed2.RData")
+survey4 <- loadRData("~/Desktop/capstone/Pollfish_Survey_IN10004.324889.moreifo_completed2.RData")
+survey5 <- loadRData("~/Desktop/capstone/Pollfish_Survey_IN10005.324886.moreifo_completed2.RData")
+survey6 <- loadRData("~/Desktop/capstone/Pollfish_Survey_IN10006.324887.moreifo_completed2.RData")
+survey7 <- loadRData("~/Desktop/capstone/Pollfish_Survey_IN10007b.378647.moreifo_completed2.RData")
+survey8 <- loadRData("~/Desktop/capstone/Pollfish_Survey_SC10001a.338700.moreifo_completed2.RData")
+survey9 <- loadRData("~/Desktop/capstone/Pollfish_Survey_SC10002a.338699.moreifo_completed2.RData")
+survey10 <- loadRData("~/Desktop/capstone/Pollfish_Survey_SC10003b.375937.moreifo_completed2.RData")
+survey11 <- loadRData("~/Desktop/capstone/Pollfish_Survey_SC10004c.375939.moreifo_completed2.RData")
+survey12 <- loadRData("~/Desktop/capstone/Pollfish_Survey_SC10005a.338697.moreifo_completed2.RData")
+
+# select columns for all data
+col_select <- function(x) { 
+  x %>% select(generic_colnames)
+}
+
+datasets <- list(survey1, survey2, survey3, survey4,
+              survey5, survey6, survey7, survey8,
+              survey9, survey10, survey11, survey12)
+
+all_generic_with_districts <- NULL
+all_generic <- generic
+for (i in datasets){
+  i <- i %>% select(generic_colnames)
+  all_generic_with_districts <- rbind(all_generic_with_districts, i)
+  i <- i %>% select(-CD_116, -state)
+  all_generic <- rbind(all_generic, i)
+}
+
+all_generic <- all_generic %>%
+  mutate(race = fct_recode(race, Other = 'Other Race'))
+all_generic_with_districts <- all_generic_with_districts %>%
+  mutate(race = fct_recode(race, Other = 'Other Race')) %>%
+  rename(district = CD_116)
+
+save(all_generic, file = "~/Desktop/capstone/all_generic.RData")
+write_csv(all_generic, '~/Desktop/capstone/all_generic.csv')
+save(all_generic_with_districts, file = "~/Desktop/capstone/all_generic_with_districts.RData")
+write_csv(all_generic_with_districts, '~/Desktop/capstone/all_generic_with_districts.csv')
+
+
+## specific polling preprocessing
+load('~/Desktop/capstone/LCV_round_3.RData')
+specific <- survey_total %>%
+  select(party, gender, age, race, education, urbanicity, married,
+         vote2018 = `If the election for the U.S. House of Representatives in your district was today, who would you vote for?`,
+         district, wave) %>%
+  filter(!is.na(vote2018)) %>%
+  mutate(vote2018 = fct_recode(vote2018,
+                               `Other candidate/not sure` = 'Other candidate',
+                               `Other candidate/not sure` = 'Undecided'),
+         race = fct_recode(race, Other = 'Other Race'))
+write_csv(specific, '~/Desktop/capstone/all_specific.csv')
+  
+## population preprocessing
+load('~/Desktop/capstone/projection_space_national_18-10_02.RData')
+population <- pops %>%
+  mutate(education = ifelse(education=='No college', 'No Bachelors', 'Bachelors')) %>%
+  group_by(age, urbanicity, gender, state, race, education, married, party, congressional_district) %>%
+  summarise(N = sum(N)) %>%
+  rename(district = congressional_district) %>%
+  ungroup() %>%
+  mutate(district = str_sub(district, 2)) %>%
+  unite(district, state, district, sep = '-', remove=FALSE)
+write_csv(population, '~/Desktop/capstone/population_data.csv')
+```
+
+
+
+
+
+
+```{r data}
+set.seed(42)
+demographics <- c('party', 'gender', 'age', 'race', 'education', 'urbanicity', 'married')
+demographic_combinations <- c(combn(demographics, simplify=FALSE, 1),
+                              combn(demographics, simplify=FALSE, 2),
+                              combn(demographics, simplify=FALSE, 3),
+                              combn(demographics, simplify=FALSE, 4),
+                              combn(demographics, simplify=FALSE, 5),
+                              combn(demographics, simplify=FALSE, 6),
+                              combn(demographics, simplify=FALSE, 7),
+                              'district')
+pops <- read_csv('~/Desktop/capstone/population_data.csv',
+                 col_types=cols(age = col_factor(levels=c('18 - 24', '25 - 34', '35 - 44', '45 - 54', '> 54')),
+                                urbanicity = col_factor(levels=c('R1', 'R2', 'S3', 'S4', 'U5', 'U6')),
+                                gender = col_factor(levels=c('Male', 'Female')),
+                                district = col_factor(NULL),
+                                state = col_skip(),
+                                race = col_factor(levels=c('White', 'Hispanic', 'Black', 'Other')),
+                                education = col_factor(levels=c('No Bachelors', 'Bachelors')),
+                                married = col_factor(levels=c('Unmarried', 'Married')),
+                                party = col_factor(levels=c('Dem', 'Rep', 'Ind')),
+                                N = col_double()))
+
+
+
+generic_s <- read_csv('~/Desktop/capstone/all_generic_with_districts.csv',
+                    col_types=cols(party = col_factor(levels=levels(pops$party)),
+                                   gender = col_factor(levels=levels(pops$gender)),
+                                   age = col_factor(levels=levels(pops$age)),
+                                   race = col_factor(levels=levels(pops$race)),
+                                   education = col_factor(levels=levels(pops$education)),
+                                   urbanicity = col_factor(levels=levels(pops$urbanicity)),
+                                   vote2018 = col_character(),
+                                   married = col_factor(levels=levels(pops$married)),
+                                   district = col_factor(levels=levels(pops$district)),
+                                   state = col_skip(),
+                                   wave = col_skip())) %>%
+  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
+                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
+  filter(!is.na(vote2018) & !is.na(district)) %>%
+  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican'))) %>%
+  sample_n(6209)
+specific_s <- read_csv('~/Desktop/capstone/all_specific.csv',
+                     col_types=cols(party = col_factor(levels=levels(pops$party)),
+                                    gender = col_factor(levels=levels(pops$gender)),
+                                    age = col_factor(levels=levels(pops$age)),
+                                    race = col_factor(levels=levels(pops$race)),
+                                    education = col_factor(levels=levels(pops$education)),
+                                    urbanicity = col_factor(levels=levels(pops$urbanicity)),
+                                    married = col_factor(levels=levels(pops$married)),
+                                    vote2018 = col_character(),
+                                    district = col_factor(levels = levels(pops$district)),
+                                    wave = col_skip())) %>%
+  mutate(vote2018 = case_when(vote2018 == 'Democratic candidate' ~ 'Democrat',
+                              vote2018 == 'Republican candidate' ~ 'Republican')) %>%
+  filter(!is.na(vote2018)) %>%
+  mutate(vote2018 = factor(vote2018, levels=c('Democrat', 'Republican')))
+pred_pops <- pops %>% group_by_if(is.factor) %>% summarise(N=sum(N))
+```
+
+## complete run and write to csv example:
+
+```{r generic}
+
+generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 | district))
+
+pred <- predict(generic_m, newdata = pred_pops, type="response", allow.new.levels = TRUE)
+pred_pops$pred_val = pred_pops$N * pred
+df <- list(Demographic_Type = 'National', Demographic = 'National',
+           Vote_R = sum(pred_pops$pred_val)/sum(pred_pops$N)) %>% as.tibble()
+for(i in 1:length(demographic_combinations)){
+  vars = demographic_combinations[[i]]
+  temp = pred_pops %>% group_by_(.dots = lapply(vars, as.symbol)) %>%
+    summarise(Vote_R = sum(pred_val) / sum(N)) %>%
+    unite_(col='Demographic', vars, sep=' ') %>%
+    mutate(Demographic_Type = str_to_title(str_flatten(vars, collapse=' ')))
+  
+  df <- bind_rows(df, temp)
+}
+write_csv(df, '~/Desktop/capstone/generic_mrp_glmer_results.csv')
+```
+
+
+## models 
+
+### making sure districts match
+```{r}
+library("stringr")                                                                 
+generic_s$district <- str_replace(
+    generic_s$district,
+    pattern = '-', 
+    replacement = ''
+)
+
+specific_s$district <- str_replace(
+    specific_s$district,
+    pattern = '-', 
+    replacement = ''
+)
+
+
+pred_pops$district <- str_replace(
+    pred_pops$district,
+    pattern = '-', 
+    replacement = ''
+)
+
+```
+
+```{r}
+pred_pops$district <- as.factor(pred_pops$district)
+generic_s$district <- as.factor(generic_s$district)
+specific_s$district <- as.factor(specific_s$district)
+```
+
+
+```{r}
+specific_m2 <- stan_glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender | district), data = specific_s, family = binomial(link = "logit"))
+```
+
+
+
+```{r}
+generic_m2 <- stan_glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender | district), data = generic_s, family = binomial(link = "logit"), sparse = TRUE)
+```
+
+
+```{r}
+specific_m4 <- stan_glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender + race + education | district), data = specific_s, family = binomial(link = "logit"), sparse = TRUE)
+```
+
+
+
+```{r}
+generic_m4 <- stan_glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + age*gender + (1 + age + gender + race + education | district), data = generic_s, family = binomial(link = "logit"), sparse = TRUE)
+```
+
+
+
+## predictive intervals for the 40 districts using the simple maximum likelihood lmers
+
+
+```{r}
+pred_pops_s <- subset(pred_pops, district %in% specific_s$district)
+pred_pops_g <- subset(pred_pops, district %in% generic_s$district)
+```
+```{r}
+pred_pops_s <- subset(pred_pops_s, district %in% generic_s$district)
+```
+
+
+```{r}
+specific_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district), data = specific_s, family = binomial(link = "logit"))
+```
+
+
+
+
+```{r}
+generic_m <- glmer(vote2018 ~ age + urbanicity + gender + race + education + married + party + (1 + age + gender | district), data = generic_s, family = binomial(link = "logit"))
+```
+
+
+```{r}
+#pred_pops <- select(pred_pops, -pred_val, -pred_val_up, pred_val_low)
+pred <- predictInterval(specific_m, level = 0.67, newdata=pred_pops_s, type="probability")
+
+pred_pops_s$pred_val = pred_pops_s$N * pred$fit
+pred_pops_s$pred_val_up = pred_pops_s$N * pred$upr
+pred_pops_s$pred_val_low = pred_pops_s$N * pred$lwr
+
+pred_s <- pred
+```
+
+
+```{r}
+pred$upper_band <- (pred$upr - pred$fit)
+pred$lower_band <- (pred$fit - pred$lwr)
+
+pred$excludes <- ifelse( (((pred$fit + pred$upper_band) > 0.5) & ((pred$fit - pred$lower_band) > 0.5)) | (((pred$fit + pred$upper_band) < 0.5) & ((pred$fit - pred$lower_band) < 0.5)), 1, 0)
+sum(pred$excludes == 1)/(sum(pred$excludes == 1) + sum(pred$excludes == 0))
+```
+
+
+```{r}
+pred_pops_g <- as.data.frame(pred_pops_g)
+```
+
+```{r}
+pred_g <- predictInterval(generic_m, level = 0.67, newdata=pred_pops_s, type="probability")
+
+pred_pops_g$pred_val = pred_pops_g$N * pred_g$fit
+pred_pops_g$pred_val_up = pred_pops_g$N * pred_g$upr
+pred_pops_g$pred_val_low = pred_pops_g$N * pred_g$lwr
+```
+
+```{r}
+pred_g$upper_band <- (pred_g$upr - pred_g$fit)
+pred_g$lower_band <- (pred_g$fit - pred_g$lwr)
+
+pred_g$excludes <- ifelse( (((pred_g$fit + pred_g$upper_band) > 0.5) & ((pred_g$fit - pred_g$lower_band) > 0.5)) | (((pred_g$fit + pred_g$upper_band) < 0.5) & ((pred_g$fit - pred_g$lower_band) < 0.5)), 1, 0)
+sum(pred_g$excludes == 1)/(sum(pred_g$excludes == 1) + sum(pred_g$excludes == 0))
+```
+
+
+
+### see the error for the stan_glmer versions, which I don't get at since I don't think "vote2018" should be in any of the objects here. 
+
+### here using models with sparse matrices. using the bayesian method has several benefits, for us mostly related to uncertainty estimation but also including the fact that the models actually converge. 
+
+
+```{r}
+#pred_pops <- select(pred_pops, -pred_val)
+pred_spec2 <- predictive_interval(specific_m2, prob = 0.9, newdata = pred_pops_s)
+```
