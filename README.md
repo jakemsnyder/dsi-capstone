@@ -17,4 +17,4 @@ from the traditional format. Since the new question format requires more time an
 than the traditional format to implement, it does not seem worth the investment.
 
 
-For the full report of our research, please read our [final report](Capstone Final Report.pdf).
+For the full report of our research, please read our [final report](./Capstone%20Final%20Report.pdf).
