@@ -90,3 +90,19 @@ specific_all_intercepts <- read_csv('Output/specific_mrp_all_intercepts_results.
   filter(!is.na(district))
 plot_model_eval(specific_all_intercepts, results)
 
+generic_more_slopes <- read_csv('Output/generic_more_slopes_results.csv',
+                              col_types=cols(Vote_R = col_double())) %>%
+  filter(Demographic_Type == 'District') %>%
+  select(district=Demographic,
+         Vote_R) %>%
+  filter(!is.na(district))
+plot_model_eval(generic_more_slopes, results)
+
+specific_more_slopes <- read_csv('Output/specific_more_slopes_results.csv',
+                              col_types=cols(Vote_R = col_double())) %>%
+  filter(Demographic_Type == 'District') %>%
+  select(district=Demographic,
+         Vote_R) %>%
+  filter(!is.na(district))
+plot_model_eval(specific_more_slopes, results)
+
